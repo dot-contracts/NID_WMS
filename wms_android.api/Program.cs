@@ -52,7 +52,9 @@ public class Program
         if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbName) && 
             !string.IsNullOrEmpty(dbUser) && !string.IsNullOrEmpty(dbPassword))
         {
-            connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Min Pool Size=5;Max Pool Size=100;Connection Lifetime=0;Command Timeout=30;Timeout=30;Keepalive=60";
+            // Use correct Npgsql connection string parameter names
+            // Npgsql uses camelCase parameter names: MinPoolSize, MaxPoolSize (no spaces)
+            connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require;Trust Server Certificate=true;Pooling=true;MinPoolSize=5;MaxPoolSize=100;Command Timeout=30;Timeout=30;Keepalive=60";
             Console.WriteLine($"✓ Built connection string from environment variables");
             Console.WriteLine($"  Host: {dbHost}, Port: {dbPort}, Database: {dbName}, User: {dbUser}");
         }
