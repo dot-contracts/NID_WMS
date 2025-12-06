@@ -29,7 +29,7 @@ namespace wms_android.Services
         public SignatureService()
         {
             _httpClient = new HttpClient();
-            _apiBaseUrl = "https://wms-api.nidlogistics.co.ke/api"; // Update with your actual API base URL
+            _apiBaseUrl = "https://plankton-app-d86df.ondigitalocean.app/api"; // Update with your actual API base URL
         }
 
         public async Task<bool> InitializeSignaturePadAsync()

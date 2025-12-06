@@ -71,7 +71,7 @@ namespace wms_android
             // Create HttpClient for API access
             builder.Services.AddTransient<HttpClient>(sp => {
                 var client = new HttpClient();
-                var baseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5053/";
+                var baseUrl = configuration["ApiSettings:BaseUrl"] ?? "https://plankton-app-d86df.ondigitalocean.app/";
                 
                 // Ensure baseUrl doesn't include "/api"
                 if (baseUrl.EndsWith("/api/")) {
@@ -85,7 +85,7 @@ namespace wms_android
                     System.Diagnostics.Debug.WriteLine($"Configured HttpClient with BaseAddress: {baseUrl}");
                 } catch (Exception ex) {
                     System.Diagnostics.Debug.WriteLine($"Error setting BaseAddress: {ex.Message}");
-                    client.BaseAddress = new Uri("http://localhost:5053/");
+                    client.BaseAddress = new Uri("https://plankton-app-d86df.ondigitalocean.app/");
                 }
                 return client;
             });
