@@ -41,29 +41,30 @@ public class Program
         // Configure database using connection string from appsettings or environment variables
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
         
-        // If connection string is not set, build it from individual DB_* environment variables
-        if (string.IsNullOrEmpty(connectionString))
+        // Check if connection string contains placeholders or is empty, then build from environment variables
+        // In production, prefer environment variables for security
+        var dbHost = builder.Configuration["DB_HOST"] ?? Environment.GetEnvironmentVariable("DB_HOST");
+        var dbPort = builder.Configuration["DB_PORT"] ?? Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
+        var dbName = builder.Configuration["DB_NAME"] ?? Environment.GetEnvironmentVariable("DB_NAME");
+        var dbUser = builder.Configuration["DB_USER"] ?? Environment.GetEnvironmentVariable("DB_USER");
+        var dbPassword = builder.Configuration["DB_PASSWORD"] ?? Environment.GetEnvironmentVariable("DB_PASSWORD");
+        
+        // If we have individual DB environment variables, use them (preferred in production)
+        if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbName) && 
+            !string.IsNullOrEmpty(dbUser) && !string.IsNullOrEmpty(dbPassword))
         {
-            var dbHost = builder.Configuration["DB_HOST"] ?? Environment.GetEnvironmentVariable("DB_HOST");
-            var dbPort = builder.Configuration["DB_PORT"] ?? Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
-            var dbName = builder.Configuration["DB_NAME"] ?? Environment.GetEnvironmentVariable("DB_NAME");
-            var dbUser = builder.Configuration["DB_USER"] ?? Environment.GetEnvironmentVariable("DB_USER");
-            var dbPassword = builder.Configuration["DB_PASSWORD"] ?? Environment.GetEnvironmentVariable("DB_PASSWORD");
-            
-            if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbName) && 
-                !string.IsNullOrEmpty(dbUser) && !string.IsNullOrEmpty(dbPassword))
-            {
-                connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Min Pool Size=5;Max Pool Size=100;Connection Lifetime=0;Command Timeout=30;Timeout=30;Keepalive=60";
-                Console.WriteLine($"Built connection string from environment variables (Host: {dbHost}, Database: {dbName})");
-            }
-            else
-            {
-                throw new InvalidOperationException("Database connection string is not configured. Either set ConnectionStrings__DefaultConnection or provide DB_HOST, DB_NAME, DB_USER, and DB_PASSWORD environment variables.");
-            }
+            connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Min Pool Size=5;Max Pool Size=100;Connection Lifetime=0;Command Timeout=30;Timeout=30;Keepalive=60";
+            Console.WriteLine($"✓ Built connection string from environment variables");
+            Console.WriteLine($"  Host: {dbHost}, Port: {dbPort}, Database: {dbName}, User: {dbUser}");
+        }
+        // Otherwise, use connection string from configuration if it's valid (not empty and no placeholders)
+        else if (!string.IsNullOrEmpty(connectionString) && !connectionString.Contains("${"))
+        {
+            Console.WriteLine($"✓ Using connection string from configuration file");
         }
         else
         {
-            Console.WriteLine($"Using connection string from configuration");
+            throw new InvalidOperationException("Database connection string is not configured. Either set ConnectionStrings__DefaultConnection or provide DB_HOST, DB_NAME, DB_USER, and DB_PASSWORD environment variables.");
         }
 
         // Configure Npgsql to use timestamps with time zone by default
