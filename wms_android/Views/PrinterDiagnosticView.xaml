@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:wms_android.ViewModels"
+             x:Class="wms_android.Views.PrinterDiagnosticView"
+             Title="Printer Diagnostics">
+
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="16">
+            <Label Text="Printer Diagnostics and Testing" 
+                   FontSize="22" 
+                   FontAttributes="Bold" 
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,20"/>
+
+            <Frame BorderColor="#cccccc" Padding="16" CornerRadius="8">
+                <StackLayout Spacing="10">
+                    <Label Text="Printer Status" FontSize="18" FontAttributes="Bold" />
+                    <Label x:Name="PrinterStatusLabel" Text="Checking printer status..." />
+                    <Label x:Name="PrinterTypeLabel" Text="" />
+                </StackLayout>
+            </Frame>
+
+            <Label Text="Diagnostic Tools" 
+                   FontSize="18" 
+                   FontAttributes="Bold" 
+                   Margin="0,10,0,5"/>
+
+            <Button Text="🔍 Comprehensive System Diagnostic" 
+                    Command="{Binding ComprehensiveDiagnosticCommand}"
+                    BackgroundColor="#17A2B8"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    Margin="0,5"/>
+
+            <Button Text="🤖 Test Adaptive Printer System" 
+                    Command="{Binding TestAdaptivePrinterCommand}"
+                    BackgroundColor="#6F42C1"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    Margin="0,5"/>
+
+            <Button Text="Run Printer Diagnostic Test" 
+                    Command="{Binding PrinterDiagnosticCommand}"
+                    BackgroundColor="#007BFF"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    Margin="0,5"/>
+
+            <Button Text="Print Test Page" 
+                    Command="{Binding PrintTestPageCommand}"
+                    BackgroundColor="#28A745"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    Margin="0,5"/>
+
+            <Button Text="Reset Printer" 
+                    Command="{Binding ResetPrinterCommand}"
+                    BackgroundColor="#DC3545"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    Margin="0,5"/>
+
+            <Button Text="Direct Test (Sample Style)" 
+                    Command="{Binding DirectTestCommand}"
+                    BackgroundColor="#FF9800"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    Margin="0,5"/>
+
+            <Label Text="Problem Resolution" 
+                   FontSize="18" 
+                   FontAttributes="Bold" 
+                   Margin="0,15,0,5"/>
+
+            <Button Text="🔧 Auto-Fix Issues" 
+                    Command="{Binding AutoFixCommand}"
+                    BackgroundColor="#8A2BE2"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    Margin="0,5"/>
+
+            <Button Text="⚠️ Manual Reset All" 
+                    Command="{Binding ManualResetCommand}"
+                    BackgroundColor="#FD7E14"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    Margin="0,5"/>
+
+            <Frame BorderColor="#cccccc" Padding="16" CornerRadius="8" Margin="0,10,0,0">
+                <StackLayout Spacing="10">
+                    <Label Text="Diagnostic Results" FontSize="18" FontAttributes="Bold" />
+                    <Label x:Name="DiagnosticResultsLabel" Text="No diagnostics run yet." />
+                </StackLayout>
+            </Frame>
+
+            <Button Text="Back" 
+                    Command="{Binding BackCommand}"
+                    BackgroundColor="#6C757D"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    Margin="0,20,0,0"/>
+        </StackLayout>
+    </ScrollView>
+
+</ContentPage> 

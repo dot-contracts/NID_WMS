@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:wms_android.ViewModels"
+             xmlns:shared="clr-namespace:wms_android.shared.Models;assembly=wms_android.shared"
+             xmlns:converters="clr-namespace:wms_android.Converters"
+             x:DataType="viewmodels:ReportViewModel"
+             x:Class="wms_android.Views.ReportView"
+             Title="Reports">
+
+    <ContentPage.Resources>
+        <converters:StatusToColorConverter x:Key="StatusToColorConverter" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*" Padding="20">
+        <ActivityIndicator Grid.RowSpan="2"
+                          IsRunning="{Binding IsLoading}"
+                          IsVisible="{Binding IsLoading}"
+                          HorizontalOptions="Center"
+                          VerticalOptions="Center" />
+
+        <VerticalStackLayout Grid.Row="0" Spacing="20">
+            <Label Text="Generate Parcel Reports" 
+                   FontSize="22" 
+                   FontAttributes="Bold" 
+                   HorizontalOptions="Center"/>
+
+            <!-- Date Range Selection -->
+            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" ColumnSpacing="15" RowSpacing="5">
+                <Label Grid.Row="0" Grid.Column="0" Text="Start Date" />
+                <DatePicker Grid.Row="1" Grid.Column="0" Date="{Binding StartDate}" />
+                
+                <Label Grid.Row="0" Grid.Column="1" Text="End Date" />
+                <DatePicker Grid.Row="1" Grid.Column="1" Date="{Binding EndDate}" />
+            </Grid>
+
+            <Button Text="Generate Report" 
+                    Command="{Binding GenerateReportCommand}"
+                    BackgroundColor="#2196F3" 
+                    TextColor="White" 
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    HeightRequest="50"/>
+            
+            <!-- Metrics Cards - Only show when report is generated -->
+            <Grid IsVisible="{Binding IsReportGenerated}" 
+                  ColumnDefinitions="*,*" 
+                  RowDefinitions="Auto,Auto" 
+                  ColumnSpacing="15" 
+                  RowSpacing="15">
+                
+                <!-- Total Parcels Card -->
+                <Frame Grid.Row="0" Grid.Column="0" 
+                       BackgroundColor="#3498db" 
+                       BorderColor="Transparent"
+                       CornerRadius="10"
+                       Padding="15">
+                    <VerticalStackLayout>
+                        <Label Text="Total Parcels" 
+                               TextColor="White" 
+                               FontSize="16" 
+                               HorizontalOptions="Center"/>
+                        <Label Text="{Binding TotalParcels}" 
+                               TextColor="White" 
+                               FontSize="28" 
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Total Sales Card -->
+                <Frame Grid.Row="0" Grid.Column="1" 
+                       BackgroundColor="#9b59b6" 
+                       BorderColor="Transparent"
+                       CornerRadius="10"
+                       Padding="15">
+                    <VerticalStackLayout>
+                        <Label Text="Total Sales" 
+                               TextColor="White" 
+                               FontSize="16" 
+                               HorizontalOptions="Center"/>
+                        <Label Text="{Binding TotalSales, StringFormat='Ksh {0:N2}'}" 
+                               TextColor="White" 
+                               FontSize="28" 
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Delivered Parcels Card -->
+                <Frame Grid.Row="1" Grid.Column="0" 
+                       BackgroundColor="#27ae60" 
+                       BorderColor="Transparent"
+                       CornerRadius="10"
+                       Padding="15">
+                    <VerticalStackLayout>
+                        <Label Text="Delivered" 
+                               TextColor="White" 
+                               FontSize="16" 
+                               HorizontalOptions="Center"/>
+                        <Label Text="{Binding DeliveredParcels}" 
+                               TextColor="White" 
+                               FontSize="28" 
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Pending Parcels Card -->
+                <Frame Grid.Row="1" Grid.Column="1" 
+                       BackgroundColor="#e74c3c" 
+                       BorderColor="Transparent"
+                       CornerRadius="10"
+                       Padding="15">
+                    <VerticalStackLayout>
+                        <Label Text="Pending" 
+                               TextColor="White" 
+                               FontSize="16" 
+                               HorizontalOptions="Center"/>
+                        <Label Text="{Binding PendingParcels}" 
+                               TextColor="White" 
+                               FontSize="28" 
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </Frame>
+            </Grid>
+
+            <!-- Export/Share Buttons - Only show when report is generated -->
+            <HorizontalStackLayout IsVisible="{Binding IsReportGenerated}" 
+                                  Spacing="10"
+                                  HorizontalOptions="Center">
+                <Button Text="Export to PDF" 
+                        Command="{Binding ExportReportCommand}"
+                        BackgroundColor="#16a085"
+                        TextColor="White"
+                        CornerRadius="8"
+                        Padding="10,5"/>
+                        
+                <Button Text="Share Report" 
+                        Command="{Binding ShareReportCommand}"
+                        BackgroundColor="#f39c12"
+                        TextColor="White"
+                        CornerRadius="8"
+                        Padding="10,5"/>
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+
+        <!-- Parcels List - Only show when report is generated -->
+        <ScrollView Grid.Row="1" 
+                   IsVisible="{Binding IsReportGenerated}" 
+                   Margin="0,20,0,0">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Parcels in Report" 
+                       FontSize="18" 
+                       FontAttributes="Bold"/>
+                
+                <CollectionView ItemsSource="{Binding Parcels}" 
+                               EmptyView="No parcels found in this date range">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="shared:Parcel">
+                            <Frame Margin="0,5" Padding="10" 
+                                   BorderColor="#dddddd" 
+                                   CornerRadius="5">
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                    <Label Grid.Row="0" Grid.Column="0" 
+                                           Text="{Binding WaybillNumber}" 
+                                           FontAttributes="Bold"/>
+                                    
+                                    <Label Grid.Row="1" Grid.Column="0" 
+                                           Text="{Binding Receiver}" 
+                                           FontSize="14"/>
+                                    
+                                    <Label Grid.Row="2" Grid.Column="0" 
+                                           Text="{Binding CreatedAt, StringFormat='{0:MM/dd/yyyy}'}" 
+                                           TextColor="#666666"
+                                           FontSize="12"/>
+                                    
+                                    <Label Grid.Row="0" Grid.Column="1" Grid.RowSpan="3"
+                                           Text="{Binding Status, StringFormat='{0}'}"
+                                           VerticalOptions="Center"
+                                           HorizontalOptions="End"
+                                           TextColor="{Binding Status, Converter={StaticResource StatusToColorConverter}}"
+                                           FontAttributes="Bold"/>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage> 

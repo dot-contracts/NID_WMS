@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:material="http://uraniumui.com/material"
+             xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome.Symbols;assembly=UraniumUI.Icons.FontAwesome"
+             x:Class="wms_android.Views.LoginPage"
+             BackgroundColor="White"
+             Title="Login">
+    <Grid VerticalOptions="Center" RowSpacing="20" Padding="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        
+        <Frame Grid.Row="0" Padding="20" HasShadow="True" CornerRadius="10" BorderColor="#DDD">
+            <VerticalStackLayout Spacing="20">
+                <!-- App Logo or Title -->
+                <Label Text="Warehouse Management System" 
+                       FontSize="24" 
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center" 
+                       Margin="0,0,0,20" />
+                
+                <!-- Username Field -->
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <!-- Temporarily Commented Out Icon -->
+                    <!-- 
+                    <Image Grid.Column="0" WidthRequest="24" HeightRequest="24">
+                        <Image.Source>
+                            <FontImageSource Glyph="{x:Static fa:FontAwesomeSolid.User}" 
+                                             FontFamily="FontAwesomeSolid" 
+                                             Color="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"/>
+                        </Image.Source>
+                    </Image>
+                    -->
+                    <Entry Grid.Column="1" 
+                           Placeholder="Username" 
+                           Text="{Binding Username}" 
+                           x:Name="UsernameEntry" />
+                </Grid>
+                
+                <!-- Password Field -->
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <!-- Temporarily Commented Out Icon -->
+                    <!-- 
+                    <Image Grid.Column="0" WidthRequest="24" HeightRequest="24">
+                        <Image.Source>
+                            <FontImageSource Glyph="{x:Static fa:FontAwesomeSolid.Lock}" 
+                                             FontFamily="FontAwesomeSolid" 
+                                             Color="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"/>
+                        </Image.Source>
+                    </Image>
+                    -->
+                    <Entry Grid.Column="1" 
+                           Placeholder="Password" 
+                           Text="{Binding Password}" 
+                           IsPassword="True" />
+                </Grid>
+                
+                <!-- Error Message -->
+                <Label 
+                    Text="{Binding ErrorMessage}" 
+                    TextColor="Red" 
+                    IsVisible="{Binding HasError}" 
+                    HorizontalOptions="Center" />
+                
+                <!-- Login Button -->
+                <Button 
+                    Text="LOGIN" 
+                    Command="{Binding LoginCommand}" 
+                    BackgroundColor="#2196F3" 
+                    TextColor="White"
+                    HorizontalOptions="Fill" />
+                
+                <!-- Forgot Password -->
+                <Label 
+                    Text="Forgot Password?" 
+                    FontSize="Small" 
+                    HorizontalOptions="Center" 
+                    TextDecorations="Underline" 
+                    Margin="0,10,0,0">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ForgotPasswordCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </VerticalStackLayout>
+        </Frame>
+    </Grid>
+</ContentPage>

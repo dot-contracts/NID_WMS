@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:wms_android.Controls"
+             x:Class="wms_android.Views.ParcelsView"
+             xmlns:viewmodels="clr-namespace:wms_android.ViewModels"
+             x:DataType="viewmodels:ParcelsViewModel"
+             Title="{Binding ModuleName}">
+    
+    <Grid>
+        <!-- Main content -->
+        <ScrollView>
+            <Grid RowSpacing="16" Padding="20" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <!-- Header -->
+                <Frame Grid.Row="0" Margin="0,0,0,10" BorderColor="#DDD" CornerRadius="8" Padding="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto" Padding="10">
+                        <ImageButton Grid.Column="0" Source="notification_icon.png" WidthRequest="24" HeightRequest="24" />
+                        <Label Grid.Column="1" Text="{Binding ModuleName}" HorizontalOptions="Center" 
+                               FontSize="18" FontAttributes="Bold" />
+                        <ImageButton Grid.Column="2" Source="profile_icon.png" WidthRequest="24" HeightRequest="24" />
+                    </Grid>
+                </Frame>
+
+                <!-- Sender Details -->
+                <Frame Grid.Row="1" Margin="0,5" BorderColor="#DDD" CornerRadius="8" Padding="10">
+                    <VerticalStackLayout Spacing="10" Padding="10">
+                        <Label Text="Sender Details" FontAttributes="Bold" Margin="0,0,0,5" />
+                        <Entry Placeholder="Sender" Text="{Binding CurrentParcel.Sender}" />
+                        <Entry Placeholder="Telephone" 
+                               Text="{Binding CurrentParcel.SenderTelephone, Mode=TwoWay}" 
+                               Keyboard="Telephone" 
+                               TextChanged="SenderPhoneNumber_TextChanged" />
+                        
+                        <Label x:Name="SenderPhoneError"
+                               Text="Invalid sender phone number"
+                               TextColor="Red"
+                               IsVisible="False" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Receiver Details -->
+                <Frame Grid.Row="2" Margin="0,5" BorderColor="#DDD" CornerRadius="8" Padding="10">
+                    <VerticalStackLayout Spacing="10" Padding="10">
+                        <Label Text="Receiver Details" FontAttributes="Bold" Margin="0,0,0,5" />
+                        <Entry Placeholder="Receiver" Text="{Binding CurrentParcel.Receiver}" />
+                        <Entry Placeholder="Telephone" 
+                               Text="{Binding CurrentParcel.ReceiverTelephone, Mode=TwoWay}" 
+                               Keyboard="Telephone" 
+                               TextChanged="ReceiverPhoneNumber_TextChanged" />
+                        
+                        <Label x:Name="ReceiverPhoneError"
+                               Text="Invalid receiver phone number"
+                               TextColor="Red"
+                               IsVisible="False" />
+                        
+                        <Picker Title="Destination" 
+                               ItemsSource="{Binding Destinations}"
+                               SelectedItem="{Binding CurrentParcel.Destination}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Parcel Description -->
+                <Frame Grid.Row="3" Margin="0,5" BorderColor="#DDD" CornerRadius="8" Padding="10">
+                    <VerticalStackLayout Spacing="10" Padding="10">
+                        <Label Text="Parcel Description" FontAttributes="Bold" Margin="0,0,0,5" />
+                        <Entry Placeholder="Qty" 
+                               Text="{Binding CurrentParcel.Quantity}" 
+                               Keyboard="Numeric" />
+                        
+                        <Editor Placeholder="Description" 
+                                Text="{Binding CurrentParcel.Description}" 
+                                HeightRequest="100" />
+                        
+                        <Entry Placeholder="Amount" 
+                               Text="{Binding CurrentParcel.Amount}" 
+                               Keyboard="Numeric" />
+                        
+                        <!-- Rate entry commented out for now
+                        <Entry Placeholder="Rate" 
+                               Text="{Binding CurrentParcel.Rate}" 
+                               Keyboard="Numeric" />
+                        -->
+                        
+                        <Picker Title="Payment Mode" 
+                               ItemsSource="{Binding PaymentMethods}"
+                               SelectedItem="{Binding CurrentParcel.PaymentMethods}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Action Buttons -->
+                <Grid Grid.Row="4" ColumnDefinitions="*,*,*" Margin="0,20,0,20" ColumnSpacing="10">
+                    <!-- View Parcels button commented out for now
+                    <Button Grid.Column="0" 
+                            Text="View Parcels" 
+                            Command="{Binding ViewParcelsCommand}" 
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White" />
+                    -->
+                    
+                    <Button Grid.Column="1" 
+                            Text="Done" 
+                            Command="{Binding DoneCommand}" 
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White" />
+                    
+                    <!-- Add Parcel button commented out for now
+                    <Button Grid.Column="2" 
+                            Text="Add Parcel" 
+                            Command="{Binding AddParcelCommand}" 
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White" />
+                    -->
+                </Grid>
+            </Grid>
+        </ScrollView>
+        
+        <!-- Loading overlay -->
+        <controls:LoadingOverlay />
+    </Grid>
+</ContentPage>

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:wms_android.ViewModels"
+             xmlns:models="clr-namespace:wms_android.shared.Models;assembly=wms_android.shared"
+             x:Class="wms_android.Views.ParcelConfirmationView"
+             x:DataType="viewmodels:ParcelConfirmationViewModel"
+             BackgroundColor="{StaticResource Background}"
+             Title="Parcel Confirmation">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.RowSpan="4" 
+                           IsRunning="{Binding IsLoading}"
+                           IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+
+        <!-- Header Section -->
+        <StackLayout Grid.Row="0" Padding="15,10" BackgroundColor="{StaticResource PrimaryLight}" Spacing="5">
+            <Label Text="Daily Parcel Confirmation" 
+                   FontSize="16" 
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource PrimaryDark}" 
+                   HorizontalOptions="Center" />
+            
+            <Label Text="{Binding TodayDate, StringFormat='Date: {0:MMM dd, yyyy}'}" 
+                   FontSize="12" 
+                   TextColor="{StaticResource PrimaryDark}" 
+                   HorizontalOptions="Center" />
+        </StackLayout>
+
+        <!-- Confirmer and Destination Selection -->
+        <StackLayout Grid.Row="1" Padding="15,8" BackgroundColor="{StaticResource Secondary}" Spacing="8">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <StackLayout Grid.Column="0">
+                    <Label Text="Confirmer" 
+                           FontSize="12" 
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource PrimaryDark}" />
+                    
+                    <Picker ItemsSource="{Binding ManagerUsers}" 
+                            SelectedItem="{Binding SelectedManager}"
+                            Title="Choose Confirmer..."
+                            BackgroundColor="White"
+                            FontSize="12" />
+                </StackLayout>
+                
+                <StackLayout Grid.Column="1">
+                    <Label Text="Destination" 
+                           FontSize="12" 
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource PrimaryDark}" />
+                    
+                    <Picker ItemsSource="{Binding Destinations}" 
+                            SelectedItem="{Binding SelectedDestination}"
+                            Title="All Destinations"
+                            BackgroundColor="White"
+                            FontSize="12" />
+                </StackLayout>
+            </Grid>
+            
+            <!-- Password Verification Section - Only visible when confirmer is selected -->
+            <StackLayout IsVisible="{Binding IsConfirmerSelected}" Spacing="5">
+                <Label Text="{Binding PasswordPromptText}" 
+                       FontSize="12" 
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource PrimaryDark}" />
+                
+                <Entry Text="{Binding ConfirmerPassword}"
+                       Placeholder="Enter confirmer password..."
+                       IsPassword="True"
+                       BackgroundColor="White"
+                       FontSize="12"
+                       HeightRequest="40" />
+                
+                <Button Text="Verify Confirmer"
+                        Command="{Binding VerifyConfirmerCommand}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        FontSize="12"
+                        HeightRequest="35"
+                        IsVisible="{Binding ShowVerifyButton}" />
+                
+                <Label Text="{Binding VerificationStatusText}"
+                       TextColor="{Binding VerificationStatusColor}"
+                       FontSize="11"
+                       FontAttributes="Bold"
+                       IsVisible="{Binding ShowVerificationStatus}" />
+            </StackLayout>
+        </StackLayout>
+
+        <!-- Parcels List -->
+        <CollectionView Grid.Row="2" 
+                        ItemsSource="{Binding FilteredParcels}"
+                        IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"
+                        BackgroundColor="{StaticResource Background}">
+                <CollectionView.EmptyView>
+                    <StackLayout HorizontalOptions="Center" VerticalOptions="Center" Padding="20">
+                        <Label Text="No parcels found for today" 
+                               FontSize="16" 
+                               TextColor="{StaticResource PrimaryDark}"
+                               HorizontalOptions="Center" />
+                        <Label Text="Create some parcels to see them here" 
+                               FontSize="12" 
+                               TextColor="{StaticResource PrimaryDark}"
+                               HorizontalOptions="Center" />
+                    </StackLayout>
+                </CollectionView.EmptyView>
+                
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="viewmodels:ParcelConfirmationItem">
+                        <Grid Padding="15,10">
+                            <Frame BackgroundColor="White"
+                                   BorderColor="{Binding IsConfirmed, Converter={StaticResource BoolToConfirmationBorderColorConverter}}"
+                                   CornerRadius="10"
+                                   Padding="15"
+                                   HasShadow="True">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                                    
+                                    <!-- Header: Waybill and Confirmation Status -->
+                                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0" 
+                                               Text="{Binding Parcel.WaybillNumber, StringFormat='Waybill: {0}'}" 
+                                               FontSize="14" 
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource PrimaryDark}" />
+                                        <Label Grid.Column="1" 
+                                               Text="{Binding ConfirmationStatus}" 
+                                               FontSize="12"
+                                               TextColor="{Binding IsConfirmed, Converter={StaticResource BoolToConfirmationTextColorConverter}}"
+                                               FontAttributes="Bold" />
+                                    </Grid>
+
+                                    <!-- Sender and Receiver -->
+                                    <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                        <StackLayout Grid.Column="0">
+                                            <Label Text="From:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                            <Label Text="{Binding Parcel.Sender}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                        </StackLayout>
+                                        <StackLayout Grid.Column="1">
+                                            <Label Text="To:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                            <Label Text="{Binding Parcel.Receiver}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                        </StackLayout>
+                                    </Grid>
+
+                                    <!-- Description and Quantity -->
+                                    <Grid Grid.Row="2" ColumnDefinitions="2*,*" ColumnSpacing="10">
+                                        <StackLayout Grid.Column="0">
+                                            <Label Text="Description:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                            <Label Text="{Binding Parcel.Description}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                        </StackLayout>
+                                        <StackLayout Grid.Column="1">
+                                            <Label Text="Qty:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                            <Label Text="{Binding Parcel.Quantity}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                        </StackLayout>
+                                    </Grid>
+
+                                    <!-- Amount, Payment Mode and Destination -->
+                                    <Grid Grid.Row="3" ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                                        <StackLayout Grid.Column="0">
+                                            <Label Text="Amount:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                            <Label Text="{Binding Parcel.Amount, StringFormat='Ksh {0:N2}'}" FontSize="12" TextColor="{StaticResource Primary}" FontAttributes="Bold"/>
+                                        </StackLayout>
+                                        <StackLayout Grid.Column="1">
+                                            <Label Text="Payment:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                            <Label Text="{Binding Parcel.PaymentMethods}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                        </StackLayout>
+                                        <StackLayout Grid.Column="2">
+                                            <Label Text="Destination:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                            <Label Text="{Binding Parcel.Destination}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                        </StackLayout>
+                                    </Grid>
+
+                                    <!-- Date -->
+                                    <Label Grid.Row="4" 
+                                           Text="{Binding Parcel.CreatedAt, StringFormat='Created: {0:MMM dd, yyyy HH:mm}'}" 
+                                           FontSize="10" 
+                                           TextColor="{StaticResource Secondary}"
+                                           HorizontalOptions="End" />
+
+                                    <!-- Confirm Button -->
+                                    <Button Grid.Row="5" 
+                                            Text="{Binding ConfirmButtonText}"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ParcelConfirmationViewModel}}, Path=ToggleParcelConfirmationCommand}"
+                                            CommandParameter="{Binding}"
+                                            BackgroundColor="{Binding ConfirmButtonColor}"
+                                            TextColor="White"
+                                            HeightRequest="40"
+                                            Margin="0,5,0,0" />
+                                </Grid>
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        <!-- Done Button -->
+        <Button Grid.Row="3" 
+                Text="Done - Finalize All Confirmed Parcels"
+                Command="{Binding FinalizeConfirmedParcelsCommand}"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="White"
+                HeightRequest="50"
+                Margin="15"
+                IsVisible="{Binding HasConfirmedParcels}" />
+    </Grid>
+</ContentPage>

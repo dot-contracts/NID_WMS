@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="wms_android.Controls.LoadingOverlay"
+             ZIndex="9999"
+             IsVisible="{Binding IsLoading}">
+    <AbsoluteLayout VerticalOptions="FillAndExpand"
+                    HorizontalOptions="FillAndExpand">
+        <Grid BackgroundColor="#80000000"
+              AbsoluteLayout.LayoutFlags="All"
+              AbsoluteLayout.LayoutBounds="0,0,1,1">
+            <Frame HorizontalOptions="Center" 
+                   VerticalOptions="Center"
+                   Padding="20"
+                   BorderColor="Transparent"
+                   BackgroundColor="White"
+                   CornerRadius="10"
+                   HasShadow="True">
+                <VerticalStackLayout Spacing="10" WidthRequest="200">
+                    <ActivityIndicator IsRunning="{Binding IsLoading}" 
+                                       Color="#2196F3"
+                                       HeightRequest="50"
+                                       WidthRequest="50"
+                                       HorizontalOptions="Center" />
+                    
+                    <Label Text="{Binding LoadingMessage}"
+                           TextColor="#333333"
+                           FontSize="16"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+            </Frame>
+        </Grid>
+    </AbsoluteLayout>
+</ContentView> 

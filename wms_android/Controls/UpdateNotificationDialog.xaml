@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Grid xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+      xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+      x:Class="wms_android.Controls.UpdateNotificationDialog"
+      BackgroundColor="Transparent"
+      IsVisible="{Binding IsVisible}"
+      x:Name="RootGrid">
+    
+    <!-- Semi-transparent backdrop -->
+    <BoxView BackgroundColor="Black" 
+             Opacity="0.5" />
+    
+    <!-- Update Dialog with Glass Effect -->
+    <Frame HorizontalOptions="Center"
+           VerticalOptions="Center"
+           WidthRequest="350"
+           BackgroundColor="White"
+           BorderColor="Transparent"
+           CornerRadius="20"
+           Padding="25"
+           HasShadow="True">
+        
+        <!-- Glass effect background -->
+        <Frame.Background>
+            <LinearGradientBrush EndPoint="0,1">
+                <GradientStop Color="White" Offset="0.0" />
+                <GradientStop Color="#F0F8FF" Offset="1.0" />
+            </LinearGradientBrush>
+        </Frame.Background>
+        
+        <StackLayout Spacing="20">
+            <!-- Update Icon -->
+            <Frame BackgroundColor="{StaticResource Primary}"
+                   WidthRequest="60"
+                   HeightRequest="60"
+                   CornerRadius="30"
+                   HorizontalOptions="Center"
+                   Padding="0">
+                <Label Text="↻"
+                       FontSize="30"
+                       TextColor="White"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </Frame>
+            
+            <!-- Title -->
+            <Label Text="Update Available"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource PrimaryDark}"
+                   HorizontalOptions="Center" />
+                   
+            <!-- Message -->
+            <Label Text="{Binding Message}"
+                   FontSize="14"
+                   TextColor="{StaticResource PrimaryDark}"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center" />
+            
+            <!-- Version Info -->
+            <Label Text="{Binding VersionInfo}"
+                   FontSize="12"
+                   TextColor="{StaticResource Secondary}"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center" />
+            
+            <!-- Progress Bar (initially hidden) -->
+            <StackLayout IsVisible="{Binding IsDownloading}" Spacing="10">
+                <ProgressBar Progress="{Binding DownloadProgress}" 
+                             ProgressColor="{StaticResource Primary}"
+                             HeightRequest="8" />
+                <Label Text="{Binding ProgressText}"
+                       FontSize="12"
+                       TextColor="{StaticResource PrimaryDark}"
+                       HorizontalOptions="Center" />
+            </StackLayout>
+            
+            <!-- Action Buttons -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="15" IsVisible="{Binding ShowButtons}">
+                <Button Grid.Column="0"
+                        Text="Not Now"
+                        BackgroundColor="{StaticResource Secondary}"
+                        TextColor="{StaticResource PrimaryDark}"
+                        CornerRadius="10"
+                        Command="{Binding DenyCommand}" />
+                        
+                <Button Grid.Column="1"
+                        Text="Update Now"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        CornerRadius="10"
+                        Command="{Binding AcceptCommand}" />
+            </Grid>
+        </StackLayout>
+    </Frame>
+</Grid>

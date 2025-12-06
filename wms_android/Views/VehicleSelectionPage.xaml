@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="wms_android.Views.VehicleSelectionPage"
+             Title="VehicleSelectionPage">
+    <VerticalStackLayout Padding="10">
+        <Label Text="Select Vehicle" FontSize="Medium" />
+        <Picker ItemsSource="{Binding Vehicles}" 
+                SelectedItem="{Binding SelectedVehicle}" 
+                Title="Select Vehicle" />
+
+        <Label Text="Select Driver" FontSize="Medium" />
+        <Picker ItemsSource="{Binding Drivers}" 
+                SelectedItem="{Binding SelectedDriver}" 
+                Title="Select Driver" />
+
+        <Button Text="Confirm Vehicle and Driver" 
+                Command="{Binding ConfirmVehicleAndDriverCommand}" />
+    </VerticalStackLayout>
+</ContentPage>

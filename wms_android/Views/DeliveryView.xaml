@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:wms_android.ViewModels"
+             x:Class="wms_android.Views.DeliveryView"
+             x:DataType="viewModels:DeliveryViewModel"
+             Title="Parcel Delivery">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center"
+                               Margin="0,10,0,10" />
+                               
+            <Label Text="{Binding StatusMessage}"
+                   FontSize="Small"
+                   HorizontalOptions="Center"
+                   SemanticProperties.Description="{Binding StatusMessage}" 
+                   Margin="0,0,0,15"/>
+
+            <!-- Manual Waybill Entry Section -->
+            <Frame Padding="15" CornerRadius="5" BorderColor="{StaticResource Gray200}" Margin="0,10,0,10">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Deliver by Waybill Number" FontSize="Medium" FontAttributes="Bold" />
+                    <Entry Placeholder="Enter Waybill Number"
+                           Text="{Binding ManualWaybillNumber}"
+                           IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" 
+                           ClearButtonVisibility="WhileEditing"/>
+                    <Button Text="Look Up Parcel"
+                            Command="{Binding LookupWaybillCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" 
+                            HorizontalOptions="Fill" />
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- Separator or just space -->
+             <BoxView HeightRequest="1" Color="{StaticResource Gray300}" Margin="0,10,0,10" />
+
+            <!-- QR Code Scan Section -->
+             <Frame Padding="15" CornerRadius="5" BorderColor="{StaticResource Gray200}" Margin="0,10,0,10">
+                 <VerticalStackLayout Spacing="10">
+                     <Label Text="Deliver by QR Code Scan" FontSize="Medium" FontAttributes="Bold" />
+                     <Button Text="Scan Delivery QR Code"
+                            Command="{Binding ScanQrCodeCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                            HorizontalOptions="Fill"/>
+                     <Label Text="Scanned Data:" FontSize="Small" FontAttributes="Bold" Margin="0,10,0,0" IsVisible="{Binding IsScannedResultVisible}" />
+                     <Label Text="{Binding ScannedResult, TargetNullValue='-', FallbackValue='-'}"
+                           FontSize="Body"
+                           IsVisible="{Binding IsScannedResultVisible}" 
+                           SemanticProperties.Description="{Binding ScannedResult}" />
+                 </VerticalStackLayout>
+            </Frame>
+
+            <!-- Common Status/Result Area (maybe remove if status is contextual?) -->
+            <!-- 
+            <Label Text="Status:" FontSize="Medium" FontAttributes="Bold" Margin="0,20,0,0" />
+            <Label Text="{Binding StatusMessage}"
+                   FontSize="Small"
+                   SemanticProperties.Description="{Binding StatusMessage}" />
+
+            <Label Text="Scanned Data:" FontSize="Medium" FontAttributes="Bold" Margin="0,20,0,0" />
+            <Label Text="{Binding ScannedResult, TargetNullValue='-', FallbackValue='-'}"
+                   FontSize="Body"
+                   SemanticProperties.Description="{Binding ScannedResult}" /> 
+            -->
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage> 

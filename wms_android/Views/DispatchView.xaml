@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:wms_android.ViewModels"
+             xmlns:models="clr-namespace:wms_android.Models"
+             x:Class="wms_android.Views.DispatchView"
+             x:DataType="viewmodels:DispatchViewModel"
+             BackgroundColor="{StaticResource Background}"
+             Title="Dispatch">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.RowSpan="3" 
+                           IsRunning="{Binding IsLoading}"
+                           IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+
+        <!-- Tab Headers -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,*" BackgroundColor="{StaticResource PrimaryLight}" Padding="0">
+            <Button Grid.Column="0" 
+                    Text="Details"
+                    Command="{Binding SelectDetailsTabCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    CornerRadius="0"
+                    BorderWidth="0"
+                    FontAttributes="Bold" />
+            <Button Grid.Column="1" 
+                    Text="Parcels"
+                    Command="{Binding SelectParcelsTabCommand}"
+                    BackgroundColor="{StaticResource PrimaryLight}"
+                    TextColor="{StaticResource PrimaryDark}"
+                    CornerRadius="0"
+                    BorderWidth="0" />
+        </Grid>
+
+        <!-- Tab Content -->
+        <ScrollView Grid.Row="1">
+            <StackLayout>
+                <!-- Details Tab Content -->
+                <StackLayout IsVisible="{Binding IsDetailsTabSelected}" Padding="15" Spacing="20">
+                    <Label Text="Dispatch Details" 
+                           FontSize="18" 
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource PrimaryDark}" />
+
+                    <!-- Vehicle Registration -->
+                    <StackLayout>
+                        <Label Text="Vehicle Registration" FontSize="14" TextColor="{StaticResource PrimaryDark}"/>
+                        <Entry Text="{Binding VehicleRegistration}" 
+                               Placeholder="Enter vehicle registration number"
+                               BackgroundColor="White"
+                               TextColor="{StaticResource PrimaryDark}" />
+                    </StackLayout>
+
+                    <!-- Driver Name -->
+                    <StackLayout>
+                        <Label Text="Driver Name" FontSize="14" TextColor="{StaticResource PrimaryDark}"/>
+                        <Entry Text="{Binding DriverName}" 
+                               Placeholder="Enter driver name"
+                               BackgroundColor="White"
+                               TextColor="{StaticResource PrimaryDark}" />
+                    </StackLayout>
+
+                    <!-- Destination Selection -->
+                    <StackLayout>
+                        <Label Text="Destination" FontSize="14" TextColor="{StaticResource PrimaryDark}"/>
+                        <Picker ItemsSource="{Binding DestinationOptions}" 
+                                SelectedItem="{Binding SelectedDestination}"
+                                Title="Select destination"
+                                BackgroundColor="White"
+                                TextColor="{StaticResource PrimaryDark}" />
+                    </StackLayout>
+
+                    <!-- Dispatch Summary -->
+                    <Frame IsVisible="{Binding CanCreateDispatch}"
+                           BackgroundColor="{StaticResource PrimaryLight}"
+                           BorderColor="{StaticResource Primary}"
+                           CornerRadius="8"
+                           Padding="15">
+                        <Label Text="{Binding DispatchSummary}" 
+                               FontSize="14"
+                               TextColor="{StaticResource PrimaryDark}"
+                               HorizontalTextAlignment="Center" />
+                    </Frame>
+                </StackLayout>
+
+                <!-- Parcels Tab Content -->
+                <StackLayout IsVisible="{Binding IsParcelsTabSelected}" Padding="15" Spacing="15">
+                    <Label Text="Select Parcels for Dispatch" 
+                           FontSize="18" 
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource PrimaryDark}" />
+
+                    <!-- Destination must be selected message -->
+                    <Frame IsVisible="{Binding HasDestinationSelected, Converter={StaticResource InvertedBoolConverter}}"
+                           BackgroundColor="{StaticResource PrimaryLight}"
+                           BorderColor="{StaticResource Secondary}"
+                           CornerRadius="8"
+                           Padding="15">
+                        <Label Text="Please select a destination in the Details tab first" 
+                               FontSize="14"
+                               TextColor="{StaticResource PrimaryDark}"
+                               HorizontalTextAlignment="Center" />
+                    </Frame>
+
+                    <!-- Filter Section -->
+                    <StackLayout IsVisible="{Binding HasDestinationSelected}" Spacing="10">
+                        <Label Text="Filter Parcels" 
+                               FontSize="16" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource PrimaryDark}" />
+
+                        <!-- Date Range -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <StackLayout Grid.Column="0">
+                                <Label Text="From Date" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                <DatePicker Date="{Binding FromDate}" 
+                                           BackgroundColor="White"
+                                           MaximumDate="{Binding ToDate}"
+                                           MinimumDate="{Binding MinimumFromDate}" />
+                            </StackLayout>
+                            <StackLayout Grid.Column="1">
+                                <Label Text="To Date" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                <DatePicker Date="{Binding ToDate}" 
+                                           BackgroundColor="White"
+                                           MaximumDate="{Binding MaximumToDate}"
+                                           MinimumDate="{Binding FromDate}" />
+                            </StackLayout>
+                        </Grid>
+
+                        <!-- Clerk Filter -->
+                        <StackLayout>
+                            <Label Text="Created By (Clerk)" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                            <Picker ItemsSource="{Binding ClerkOptions}" 
+                                    SelectedItem="{Binding SelectedClerk}"
+                                    BackgroundColor="White" />
+                        </StackLayout>
+
+                        <!-- Filter Buttons -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Button Grid.Column="0" 
+                                    Text="Apply Filters" 
+                                    Command="{Binding ApplyFiltersCommand}"
+                                    BackgroundColor="{StaticResource Primary}"
+                                    TextColor="White" />
+                            <Button Grid.Column="1" 
+                                    Text="Clear Filters" 
+                                    Command="{Binding ClearFiltersCommand}"
+                                    BackgroundColor="{StaticResource Secondary}"
+                                    TextColor="{StaticResource PrimaryDark}" />
+                        </Grid>
+
+                        <!-- Parcels Count -->
+                        <Label Text="{Binding ParcelsCountText}" 
+                               FontSize="14" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}"
+                               HorizontalTextAlignment="Center" />
+                    </StackLayout>
+
+
+                    <!-- Parcels List -->
+                    <CollectionView IsVisible="{Binding HasDestinationSelected}"
+                                    ItemsSource="{Binding FilteredParcels}"
+                                    BackgroundColor="{StaticResource Background}">
+                        <CollectionView.EmptyView>
+                            <StackLayout HorizontalOptions="Center" VerticalOptions="Center" Padding="20">
+                                <Label Text="No parcels found" 
+                                       FontSize="16" 
+                                       TextColor="{StaticResource PrimaryDark}"
+                                       HorizontalOptions="Center" />
+                                <Label Text="Try adjusting your filters or check a different page" 
+                                       FontSize="12" 
+                                       TextColor="{StaticResource PrimaryDark}"
+                                       HorizontalOptions="Center" />
+                            </StackLayout>
+                        </CollectionView.EmptyView>
+                        
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:ParcelDisplayModel">
+                                <Grid Padding="0,5">
+                                    <Frame BackgroundColor="White"
+                                           BorderColor="{StaticResource PrimaryLight}"
+                                           CornerRadius="10"
+                                           Padding="15"
+                                           HasShadow="True">
+                                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                                            
+                                            <!-- Header: Checkbox, Waybill and Status -->
+                                            <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
+                                                <CheckBox Grid.Column="0" 
+                                                          IsChecked="{Binding IsSelected}"
+                                                          VerticalOptions="Center" />
+                                                <Label Grid.Column="1" 
+                                                       Text="{Binding WaybillNumber, StringFormat='Waybill: {0}'}" 
+                                                       FontSize="14" 
+                                                       FontAttributes="Bold"
+                                                       TextColor="{StaticResource PrimaryDark}"
+                                                       VerticalOptions="Center"
+                                                       Margin="10,0,0,0" />
+                                                <Label Grid.Column="2" 
+                                                       Text="{Binding Status}" 
+                                                       FontSize="12"
+                                                       TextColor="{StaticResource Primary}"
+                                                       FontAttributes="Bold"
+                                                       VerticalOptions="Center" />
+                                            </Grid>
+
+                                            <!-- Sender and Receiver -->
+                                            <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                                <StackLayout Grid.Column="0">
+                                                    <Label Text="From:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                                    <Label Text="{Binding Sender}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                                </StackLayout>
+                                                <StackLayout Grid.Column="1">
+                                                    <Label Text="To:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                                    <Label Text="{Binding RecipientName}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                                </StackLayout>
+                                            </Grid>
+
+                                            <!-- Description and Quantity -->
+                                            <Grid Grid.Row="2" ColumnDefinitions="2*,*" ColumnSpacing="10">
+                                                <StackLayout Grid.Column="0">
+                                                    <Label Text="Description:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                                    <Label Text="{Binding Description}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                                </StackLayout>
+                                                <StackLayout Grid.Column="1">
+                                                    <Label Text="Qty:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                                    <Label Text="{Binding Quantity}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                                </StackLayout>
+                                            </Grid>
+
+                                            <!-- Amount, Payment Mode and Destination -->
+                                            <Grid Grid.Row="3" ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                                                <StackLayout Grid.Column="0">
+                                                    <Label Text="Amount:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                                    <Label Text="{Binding Amount, StringFormat='Ksh {0:N2}'}" FontSize="12" TextColor="{StaticResource Primary}" FontAttributes="Bold"/>
+                                                </StackLayout>
+                                                <StackLayout Grid.Column="1">
+                                                    <Label Text="Payment:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                                    <Label Text="{Binding PaymentMethods}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                                </StackLayout>
+                                                <StackLayout Grid.Column="2">
+                                                    <Label Text="Destination:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                                    <Label Text="{Binding Destination}" FontSize="12" TextColor="{StaticResource PrimaryDark}"/>
+                                                </StackLayout>
+                                            </Grid>
+
+                                            <!-- Created Date and Clerk -->
+                                            <Grid Grid.Row="4" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                                <StackLayout Grid.Column="0">
+                                                    <Label Text="Created:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                                    <Label Text="{Binding CreatedAt, StringFormat='{0:MMM dd, yyyy}'}" FontSize="12" TextColor="{StaticResource Secondary}"/>
+                                                </StackLayout>
+                                                <StackLayout Grid.Column="1">
+                                                    <Label Text="Created By:" FontSize="10" TextColor="{StaticResource PrimaryDark}" FontAttributes="Bold"/>
+                                                    <Label Text="{Binding CreatedBy}" FontSize="12" TextColor="{StaticResource Secondary}"/>
+                                                </StackLayout>
+                                            </Grid>
+                                        </Grid>
+                                    </Frame>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        
+                    </CollectionView>
+                </StackLayout>
+            </StackLayout>
+        </ScrollView>
+
+        <!-- Done Button -->
+        <Button Grid.Row="2" 
+                Text="Done - Dispatch Selected Parcels"
+                Command="{Binding DispatchSelectedParcelsCommand}"
+                IsVisible="{Binding CanCreateDispatch}"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="White"
+                FontSize="16"
+                FontAttributes="Bold"
+                Margin="15"
+                HeightRequest="50" />
+    </Grid>
+</ContentPage>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:wms_android.Views"
+             x:Class="wms_android.Views.ListParcelsView"
+             Title="Parcels Cart">
+    <StackLayout Padding="10">
+        <Label Text="Waybill Number:"
+               FontSize="18" 
+               FontAttributes="Bold" />
+        <Label Text="{Binding WaybillNumber}"
+               FontSize="16" 
+               HorizontalOptions="Center"/>
+
+        <Label Text="Sender:" FontSize="16" FontAttributes="Bold"/>
+        <Label Text="{Binding Sender}" FontSize="14"/>
+        <Label Text="Receiver:" FontSize="16" FontAttributes="Bold"/>
+        <Label Text="{Binding Receiver}" FontSize="14"/>
+        
+        <!-- ListView to display the list of parcels -->
+        <ListView x:Name="ParcelListView"
+                  ItemsSource="{Binding ParcelsInWaybill}"
+                  HasUnevenRows="True">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <ViewCell>
+                        <StackLayout Padding="10" Orientation="Vertical">
+                            <!-- Display parcel-specific details -->
+                            <Label Text="Destination:" FontSize="14"/>
+                            <Label Text="{Binding Destination}" FontSize="14"/>
+                            <Label Text="Payment:" FontSize="14"/>
+                            <Label Text="{Binding PaymentMethods}" FontSize="14"/>
+                            <Label Text="{Binding Amount, StringFormat='Amount: Ksh {0:N2}'}" FontSize="14"/>
+
+                            <!-- Edit and Delete buttons for each parcel -->
+                            <StackLayout Orientation="Horizontal" Spacing="10">
+                                <Button Text="Edit"
+                                Command="{Binding Path=BindingContext.EditParcelCommand, Source={x:Reference ParcelListView}}"
+                                CommandParameter="{Binding .}" />
+                                <Button Text="Delete"
+                                Command="{Binding Path=BindingContext.DeleteParcelCommand, Source={x:Reference ParcelListView}}"
+                                CommandParameter="{Binding .}" />
+                            </StackLayout>
+                        </StackLayout>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!-- Button to navigate back or proceed -->
+        <StackLayout Orientation="Vertical" Spacing="20" Padding="0,20,0,0">
+            <Label Text="Total Amount" FontAttributes="Bold" />
+            <Label Text="{Binding TotalAmount, StringFormat='Ksh {0:N2}'}" />
+
+            <Button Text="Done" Command="{Binding CartCommand}"  HorizontalOptions="Center" VerticalOptions="EndAndExpand" />
+            <Button Text="Back to Add Parcels" Command="{Binding BackCommand}" HorizontalOptions="Center" VerticalOptions="EndAndExpand"/>
+        </StackLayout>
+    </StackLayout>
+</ContentPage>

@@ -1,0 +1,11 @@
+<Button Text="Printer Diagnostics" 
+        Command="{Binding PrinterDiagnosticCommand}" 
+        HorizontalOptions="End" 
+        VerticalOptions="Center"
+        Margin="5,0"
+        BackgroundColor="#E8E8E8"
+        TextColor="#333333"
+        FontSize="14"
+        BorderWidth="1"
+        BorderColor="#CCCCCC"
+        CornerRadius="5"/> 

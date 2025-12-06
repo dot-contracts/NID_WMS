@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Grid xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+      xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+      x:Class="wms_android.Controls.NotificationOverlay"
+      BackgroundColor="Transparent"
+      IsVisible="{Binding IsVisible}"
+      x:Name="RootGrid">
+    
+    <!-- Semi-transparent backdrop -->
+    <BoxView BackgroundColor="Black" 
+             Opacity="0.3" />
+    
+    <!-- Notification Card with Glass Effect -->
+    <Frame HorizontalOptions="Center"
+           VerticalOptions="Center"
+           WidthRequest="300"
+           BackgroundColor="White"
+           BorderColor="Transparent"
+           CornerRadius="20"
+           Padding="30"
+           HasShadow="True">
+        
+        <!-- Glass effect background -->
+        <Frame.Background>
+            <LinearGradientBrush EndPoint="0,1">
+                <GradientStop Color="White" Offset="0.0" />
+                <GradientStop Color="#F0F8FF" Offset="1.0" />
+            </LinearGradientBrush>
+        </Frame.Background>
+        
+        <StackLayout Spacing="15" HorizontalOptions="Center">
+            <!-- Success Icon -->
+            <Frame BackgroundColor="{StaticResource Primary}"
+                   WidthRequest="60"
+                   HeightRequest="60"
+                   CornerRadius="30"
+                   HorizontalOptions="Center"
+                   Padding="0">
+                <Label Text="✓"
+                       FontSize="30"
+                       TextColor="White"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </Frame>
+            
+            <!-- Title -->
+            <Label Text="{Binding Title}"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource PrimaryDark}"
+                   HorizontalOptions="Center" />
+                   
+            <!-- Message -->
+            <Label Text="{Binding Message}"
+                   FontSize="14"
+                   TextColor="{StaticResource PrimaryDark}"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center" />
+        </StackLayout>
+    </Frame>
+</Grid>

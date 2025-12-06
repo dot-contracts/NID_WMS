@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="wms_android.Views.SettingsView"
+             Title="{Binding Title}">
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+            <Label 
+                Text="Settings"
+                FontSize="24" 
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+                
+            <Frame Padding="20" BorderColor="#DDD" HasShadow="True" CornerRadius="10">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Application Settings" FontSize="18" FontAttributes="Bold" />
+                    
+                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="20">
+                        <!-- Theme setting -->
+                        <VerticalStackLayout Grid.Row="0" Spacing="5">
+                            <Label Text="Theme" FontAttributes="Bold" />
+                            <HorizontalStackLayout Spacing="10">
+                                <RadioButton Content="Light" IsChecked="True" GroupName="Theme" />
+                                <RadioButton Content="Dark" GroupName="Theme" />
+                                <RadioButton Content="System" GroupName="Theme" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                        
+                        <!-- Notifications setting -->
+                        <VerticalStackLayout Grid.Row="1" Spacing="5">
+                            <Label Text="Notifications" FontAttributes="Bold" />
+                            <HorizontalStackLayout>
+                                <CheckBox IsChecked="{Binding NotificationsEnabled}" />
+                                <Label Text="Enable Push Notifications" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                        
+                        <!-- Language setting -->
+                        <VerticalStackLayout Grid.Row="2" Spacing="5">
+                            <Label Text="Language" FontAttributes="Bold" />
+                            <Picker SelectedIndex="{Binding SelectedLanguageIndex}">
+                                <Picker.Items>
+                                    <x:String>English</x:String>
+                                    <x:String>Swahili</x:String>
+                                    <x:String>French</x:String>
+                                </Picker.Items>
+                            </Picker>
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <Frame Padding="20" BorderColor="#DDD" HasShadow="True" CornerRadius="10">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Device Information" FontSize="18" FontAttributes="Bold" />
+                    
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="10">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Device:" FontAttributes="Bold" />
+                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding DeviceModel}" />
+                        
+                        <Label Grid.Row="1" Grid.Column="0" Text="OS Version:" FontAttributes="Bold" />
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding OsVersion}" />
+                        
+                        <Label Grid.Row="2" Grid.Column="0" Text="App Version:" FontAttributes="Bold" />
+                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding AppVersion}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- Action Buttons -->
+            <VerticalStackLayout Spacing="15">
+                <Button Text="About" 
+                        Command="{Binding ShowAboutCommand}"
+                        BackgroundColor="#2E7D32" 
+                        TextColor="White" 
+                        CornerRadius="8" />
+                
+                <Button Text="Log Out" 
+                        Command="{Binding LogoutCommand}"
+                        BackgroundColor="#E53935" 
+                        TextColor="White" 
+                        CornerRadius="8" />
+            </VerticalStackLayout>
+            
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage> 

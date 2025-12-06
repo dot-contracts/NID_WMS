@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AndroidAidlFile Include="PrinterInterface.aidl">
+      <SubFolder>recieptservice\com\recieptservice</SubFolder>
+    </AndroidAidlFile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidJavaLibrary Include="printer.jar" />
+  </ItemGroup>
+
+</Project>

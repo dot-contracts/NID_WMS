@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <TargetFrameworkVersion>v13.0</TargetFrameworkVersion>
+    <AcceptAndroidSDKLicenses>true</AcceptAndroidSDKLicenses>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <!-- Reference to the JAR files in the SDK -->
+    <LibraryProjectZip Include="Jars\AppSdkAidl_buildBy_20231222.jar" />
+    <LibraryProjectZip Include="Jars\vanstoneSdkClient-noemv_20231222.jar" />
+    
+    <!-- Native libraries -->
+    <EmbeddedNativeLibrary Include="libs\armeabi-v7a\libA90JavahCore.so" />
+  </ItemGroup>
+</Project> 

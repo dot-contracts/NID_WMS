@@ -1,0 +1,103 @@
+# Node modules
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Build artifacts
+**/bin/
+**/obj/
+**/dist/
+**/build/
+**/out/
+
+# IDE files
+**/.vs/
+**/.vscode/
+**/.idea/
+**/.fleet/
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+**/*.log
+
+# Git
+**/.git
+**/.gitignore
+**/.gitattributes
+
+# Documentation
+**/*.md
+**/*.txt
+**/*.pdf
+**/*.docx
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.svg
+**/Screen*.png
+**/device_screenshot*.png
+**/diagnostic*.png
+**/testpage*.png
+**/current_*.png
+
+# Database dumps
+**/*.dump
+**/*.tar.gz
+
+# Temporary files
+**/temp_*
+**/tmp/
+**/temporary/
+
+# Android/Mobile specific
+**/Platforms/
+**/Resources/
+**/libs/
+**/aidl/
+
+# Web projects (we only need API)
+wms_web.dispatch.django/
+wms_web.dispatch.react/
+wms_web.dispatch/
+wms_web.ems/
+
+# Android app (we only need API)
+wms_android/
+AndroidPosSdk/
+VanstonePosSdk/
+vtms_app/
+
+# Old/backup projects
+wms_android.api.new/
+wms_android.data/
+
+# Package files
+package-lock.json
+package.json
+node_modules/
+
+# Environment files
+**/*.env
+**/*.env.local
+**/*.env.development
+**/*.env.production
+
+# Test files
+**/test/
+**/tests/
+**/*.test.*
+**/*.spec.*
+
+# Cache
+**/.nuget/
+**/packages/
+
+# Logs
+**/*.log

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:wms_android.Controls"
+             x:Class="wms_android.Views.ClerkDashboardView"
+             xmlns:viewmodels="clr-namespace:wms_android.ViewModels"
+             xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
+             x:DataType="viewmodels:ClerkDashboardViewModel"
+             BackgroundColor="{StaticResource Background}"
+             Title="Dashboard">
+
+    <Grid>
+        <!-- Main content -->
+        <Grid RowDefinitions="Auto,*" Padding="20">
+            <ActivityIndicator Grid.RowSpan="2" 
+                               IsRunning="{Binding IsLoading}"
+                               IsVisible="{Binding IsLoading}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+
+
+            <ScrollView Grid.Row="1" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                <VerticalStackLayout Spacing="20">
+                    
+                    <!-- Metrics Overview -->
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="15" RowSpacing="15">
+                        <!-- Amount Owed Card -->
+                        <Frame Grid.Row="0" Grid.Column="0" 
+                               BackgroundColor="{StaticResource Primary}" 
+                               BorderColor="Transparent"
+                               CornerRadius="10"
+                               Padding="15">
+                            <VerticalStackLayout>
+                                <Label Text="Amount Owed" 
+                                       TextColor="White" 
+                                       FontSize="14" 
+                                       HorizontalOptions="Center"/>
+                                <Label Text="{Binding AmountOwed, StringFormat='Ksh {0:N2}'}" 
+                                       TextColor="White" 
+                                       FontSize="10" 
+                                       FontAttributes="Bold"
+                                       HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <!-- Cash-in Card -->
+                        <Frame Grid.Row="0" Grid.Column="1" 
+                               BackgroundColor="{StaticResource PrimaryDark}" 
+                               BorderColor="Transparent"
+                               CornerRadius="10"
+                               Padding="15">
+                            <VerticalStackLayout>
+                                <Label Text="Outstanding Debit" 
+                                       TextColor="White" 
+                                       FontSize="14" 
+                                       HorizontalOptions="Center"/>
+                                <Label Text="(Current Month)" 
+                                       TextColor="White" 
+                                       FontSize="10" 
+                                       HorizontalOptions="Center"
+                                       Opacity="0.8"/>
+                                <Label Text="{Binding CashIn, StringFormat='Ksh {0:N2}'}" 
+                                       TextColor="White" 
+                                       FontSize="10" 
+                                       FontAttributes="Bold"
+                                       HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <!-- Daily Sales Card -->
+                        <Frame Grid.Row="1" Grid.Column="0" 
+                               BackgroundColor="{StaticResource PrimaryLight}" 
+                               BorderColor="Transparent"
+                               CornerRadius="10"
+                               Padding="15">
+                            <VerticalStackLayout>
+                                <Label Text="Daily Sales" 
+                                       TextColor="{StaticResource PrimaryDark}" 
+                                       FontSize="14" 
+                                       HorizontalOptions="Center"/>
+                                <Label Text="{Binding DailySales, StringFormat='Ksh {0:N2}'}" 
+                                       TextColor="{StaticResource PrimaryDark}" 
+                                       FontSize="10" 
+                                       FontAttributes="Bold"
+                                       HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <!-- Monthly Sales Card -->
+                        <Frame Grid.Row="1" Grid.Column="1" 
+                               BackgroundColor="{StaticResource Secondary}" 
+                               BorderColor="Transparent"
+                               CornerRadius="10"
+                               Padding="15">
+                            <VerticalStackLayout>
+                                <Label Text="Monthly Sales" 
+                                       TextColor="{StaticResource PrimaryDark}" 
+                                       FontSize="14" 
+                                       HorizontalOptions="Center"/>
+                                <Label Text="{Binding MonthlySales, StringFormat='Ksh {0:N2}'}" 
+                                       TextColor="{StaticResource PrimaryDark}" 
+                                       FontSize="10" 
+                                       FontAttributes="Bold"
+                                       HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </Grid>
+
+                    <!-- Quick Actions -->
+                    <Label Text="Quick Actions" 
+                           FontSize="16" 
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource PrimaryDark}" 
+                           Margin="0,20,0,10"/>
+                    
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                        <!-- Deliver button -->
+                        <Button Grid.Row="0" Grid.Column="0"
+                                Text="Deliver"
+                                Command="{Binding NavigateToDeliveryCommand}"
+                                BackgroundColor="{StaticResource Primary}"
+                                TextColor="White"
+                                HeightRequest="50">
+                            <Button.ImageSource>
+                                <FontImageSource FontFamily="FASolid"
+                                                Glyph="&#xf0d1;"
+                                                Color="White"
+                                                Size="18" />
+                            </Button.ImageSource>
+                        </Button>
+                        
+                        <!-- View All button -->
+                        <Button Grid.Row="0" Grid.Column="1"
+                                Text="View All"
+                                Command="{Binding NavigateToViewAllParcelsCommand}"
+                                BackgroundColor="{StaticResource PrimaryDark}"
+                                TextColor="White"
+                                HeightRequest="50">
+                            <Button.ImageSource>
+                                <FontImageSource FontFamily="FASolid"
+                                                Glyph="&#xf03a;"
+                                                Color="White"
+                                                Size="18" />
+                            </Button.ImageSource>
+                        </Button>
+                        
+                        <!-- Collect button -->
+                        <Button Grid.Row="1" Grid.Column="0"
+                                Text="Collect"
+                                Command="{Binding NavigateToAddParcelCommand}"
+                                BackgroundColor="{StaticResource Primary}"
+                                TextColor="White"
+                                HeightRequest="50">
+                            <Button.ImageSource>
+                                <FontImageSource FontFamily="FASolid"
+                                                Glyph="&#xf466;"
+                                                Color="White"
+                                                Size="18" />
+                            </Button.ImageSource>
+                        </Button>
+                        
+                        <!-- Reports button -->
+                        <Button Grid.Row="1" Grid.Column="1"
+                                Text="Reports"
+                                Command="{Binding GenerateReportCommand}"
+                                BackgroundColor="{StaticResource PrimaryDark}"
+                                TextColor="White"
+                                HeightRequest="50">
+                            <Button.ImageSource>
+                                <FontImageSource FontFamily="FASolid"
+                                                Glyph="&#xf201;"
+                                                Color="White"
+                                                Size="18" />
+                            </Button.ImageSource>
+                        </Button>
+                        
+                        <!-- Confirm button -->
+                        <Button Grid.Row="2" Grid.Column="0"
+                                Text="Confirm"
+                                Command="{Binding NavigateToParcelConfirmationCommand}"
+                                BackgroundColor="{StaticResource Secondary}"
+                                TextColor="{StaticResource PrimaryDark}"
+                                HeightRequest="50">
+                            <Button.ImageSource>
+                                <FontImageSource FontFamily="FASolid"
+                                                Glyph="&#xf058;"
+                                                Color="{StaticResource PrimaryDark}"
+                                                Size="18" />
+                            </Button.ImageSource>
+                        </Button>
+                        
+                        <!-- Dispatch button - only visible for managers and admins -->
+                        <Button Grid.Row="2" Grid.Column="1"
+                                Text="Dispatch"
+                                Command="{Binding NavigateToDispatchCommand}"
+                                BackgroundColor="{StaticResource Primary}"
+                                TextColor="White"
+                                HeightRequest="50"
+                                IsVisible="{Binding IsManagerOrAdmin}">
+                            <Button.ImageSource>
+                                <FontImageSource FontFamily="FASolid"
+                                                Glyph="&#xf0d1;"
+                                                Color="White"
+                                                Size="18" />
+                            </Button.ImageSource>
+                        </Button>
+                    </Grid>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+        
+        <!-- Loading overlay -->
+        <controls:LoadingOverlay />
+    </Grid>
+</ContentPage> 

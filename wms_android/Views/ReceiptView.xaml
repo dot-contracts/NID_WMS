@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="wms_android.Views.ReceiptView"
+             Title="Receipt Preview">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="10">
+            
+            <!-- Header -->
+            <Frame Padding="15" BorderColor="#CCC" CornerRadius="5" Margin="0,0,0,15">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Ficma Home Logistics" FontSize="Large" FontAttributes="Bold" HorizontalOptions="Center" />
+                    <Label Text="0707136852 / ficmahomelogistics19@gmail.com" FontSize="Small" HorizontalOptions="Center" />
+                    <BoxView HeightRequest="1" Color="#CCC" Margin="0,5"/>
+                    <Label Text="WAYBILL RECEIPT" FontSize="Medium" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,5,0,0"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Receipt Info -->
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" RowSpacing="5" Margin="0,0,0,10">
+                <Label Grid.Row="0" Grid.Column="0" Text="Waybill No:" FontAttributes="Bold"/>
+                <Label Grid.Row="0" Grid.Column="1" Text="{Binding WaybillNumber}" />
+                <Label Grid.Row="1" Grid.Column="0" Text="Date:" FontAttributes="Bold"/>
+                <Label Grid.Row="1" Grid.Column="1" Text="{Binding Parcel.CreatedAt, StringFormat='{0:yyyy-MM-dd HH:mm:ss}', ConverterParameter=UTC, Converter={StaticResource DateTimeConverter}, FallbackValue={Binding CurrentDate, StringFormat='{0:yyyy-MM-dd HH:mm:ss}'}}" />
+            </Grid>
+
+            <BoxView HeightRequest="1" Color="#DDD" Margin="0,5"/>
+
+            <!-- Single Parcel Mode -->
+            <Grid IsVisible="{Binding IsSingleParcelMode}" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="5" Margin="0,10,0,10">
+                <Label Grid.Row="0" Grid.Column="0" Text="Sender:" FontAttributes="Bold"/>
+                <Label Grid.Row="1" Grid.Column="0" Text="{Binding Parcel.Sender}" />
+
+                <Label Grid.Row="0" Grid.Column="1" Text="Receiver:" FontAttributes="Bold"/>
+                <Label Grid.Row="1" Grid.Column="1" Text="{Binding Parcel.Receiver}" />
+            </Grid>
+
+            <!-- Single Parcel Details Table -->
+            <VerticalStackLayout IsVisible="{Binding IsSingleParcelMode}">
+                <Label Text="Parcel Details" FontSize="Medium" FontAttributes="Bold" Margin="0,10,0,5"/>
+                <Frame Padding="10" BorderColor="#DDD" CornerRadius="5">
+                    <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" Padding="5,0" RowSpacing="5">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Description" FontAttributes="Bold"/>
+                        <Label Grid.Row="0" Grid.Column="1" Text="Qty" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+                        <Label Grid.Row="0" Grid.Column="2" Text="Amount" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+                        
+                        <Label Grid.Row="1" Grid.Column="0" Text="{Binding Parcel.Description, FallbackValue='Parcel Delivery'}" />
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding Parcel.Quantity, FallbackValue='1'}" HorizontalTextAlignment="End"/>
+                        <Label Grid.Row="1" Grid.Column="2" Text="{Binding Parcel.TotalAmount, StringFormat='Ksh {0:N2}'}" HorizontalTextAlignment="End"/>
+                    </Grid>
+                </Frame>
+            </VerticalStackLayout>
+
+            <!-- Cart Mode -->
+            <VerticalStackLayout IsVisible="{Binding IsCartMode}">
+                <Label Text="Parcels" FontSize="20" FontAttributes="Bold" Margin="0,10,0,5" />
+                
+                <CollectionView ItemsSource="{Binding Parcels}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Padding="16" Margin="0,0,0,8" HasShadow="True" BorderColor="#DDD" CornerRadius="5">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
+                                    <Label Grid.Row="0" Text="{Binding Sender, StringFormat='Sender: {0}'}" />
+                                    <Label Grid.Row="1" Text="{Binding Receiver, StringFormat='Receiver: {0}'}" />
+                                    <Label Grid.Row="2" Text="{Binding Destination, StringFormat='Destination: {0}'}" />
+                                    <Label Grid.Row="3" Text="{Binding TotalAmount, StringFormat='Amount: Ksh {0:N2}'}" FontAttributes="Bold" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <BoxView HeightRequest="1" Color="#DDD" Margin="0,15"/>
+
+            <!-- Totals -->
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="5" Margin="0,10,0,10">
+                <Label Grid.Row="0" Grid.Column="0" Text="Payment Method:" HorizontalOptions="End"/>
+                <Label Grid.Row="0" Grid.Column="1" Text="{Binding PaymentMethod, FallbackValue={Binding Parcel.PaymentMethods}}" FontAttributes="Bold" HorizontalOptions="End"/>
+
+                <Label Grid.Row="1" Grid.Column="0" Text="Total Amount:" FontSize="Medium" FontAttributes="Bold" HorizontalOptions="End"/>
+                <Label Grid.Row="1" Grid.Column="1" Text="{Binding TotalAmount, StringFormat='Ksh {0:N2}', FallbackValue={Binding Parcel.TotalAmount, StringFormat='Ksh {0:N2}'}}" FontSize="Medium" FontAttributes="Bold" HorizontalOptions="End"/>
+            </Grid>
+
+            <!-- Print Buttons -->
+            <Button IsVisible="{Binding IsSingleParcelMode}"
+                    Text="Print Receipt" 
+                    Command="{Binding PrintReceiptCommand}" 
+                    HorizontalOptions="Center" 
+                    WidthRequest="200"
+                    BackgroundColor="#2196F3"
+                    TextColor="White"
+                    Margin="0,20,0,0" />
+                    
+            <Button IsVisible="{Binding IsCartMode}"
+                    Text="Print Cart Receipt" 
+                    Command="{Binding PrintCartReceiptCommand}" 
+                    HorizontalOptions="Center" 
+                    WidthRequest="200"
+                    BackgroundColor="#2196F3"
+                    TextColor="White"
+                    Margin="0,20,0,0" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

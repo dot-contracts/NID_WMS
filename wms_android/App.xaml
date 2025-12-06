@@ -1,0 +1,26 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:wms_android"
+             xmlns:converters="clr-namespace:wms_android.Converters"
+             xmlns:utils="clr-namespace:wms_android.Utils"
+             x:Class="wms_android.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Include the application's style dictionaries -->
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Add the converter resource -->
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:StatusToColorConverter x:Key="StatusToColorConverter" />
+            <converters:BoolToConfirmationBorderColorConverter x:Key="BoolToConfirmationBorderColorConverter" />
+            <converters:BoolToConfirmationTextColorConverter x:Key="BoolToConfirmationTextColorConverter" />
+            <utils:DateTimeConverter x:Key="DateTimeConverter" />
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application> 

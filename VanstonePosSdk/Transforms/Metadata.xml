@@ -1,0 +1,47 @@
+<metadata>
+  <!--
+  This sample removes the class: android.support.v4.content.AsyncTaskLoader.LoadTask:
+  <remove-node path="/api/package[@name='android.support.v4.content']/class[@name='AsyncTaskLoader.LoadTask']" />
+  
+  This sample removes the method: android.support.v4.content.CursorLoader.loadInBackground:
+  <remove-node path="/api/package[@name='android.support.v4.content']/class[@name='CursorLoader']/method[@name='loadInBackground']" />
+  -->
+  
+  <!-- Fix duplicate fields in different classes -->
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.constants']/class[@name='TmsFuncConstants']/field[@name='fnameTaskini']" />
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.constants']/class[@name='TmsFuncConstants']/field[@name='multitaskini']" />
+  
+  <!-- Fix duplicate properties in ApduResp -->
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='ApduResp']/field[@name='lenOut']" />
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='ApduResp']/field[@name='readCardDataOk']" />
+  
+  <!-- Fix duplicate properties in ApduSend -->
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='ApduSend']/field[@name='enableCancel']" />
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='ApduSend']/field[@name='lc']" />
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='ApduSend']/field[@name='le']" />
+  
+  <!-- Fix duplicate properties for ApnInfo fields -->
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='ApnInfo']/field[@name='apn']" />
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='ApnInfo']/field[@name='apnId']" />
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='ApnInfo']/field[@name='authType']" />
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='ApnInfo']/field[@name='bearer']" />
+  
+  <!-- Fix duplicate properties in CommParaStruc -->
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='CommParaStruc']/field[@name='cdmaSet']" />
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='CommParaStruc']/field[@name='curCommMode']" />
+  <remove-node path="/api/package[@name='com.vanstone.trans.api.struct']/class[@name='CommParaStruc']/field[@name='dialSet']" />
+  
+  <!-- Fix OnTransact method warnings -->
+  <attr path="/api/package[@name='com.vanstone.appsdk.api.authface']/interface[@name='IAuthFaceHandler.Stub']/method[@name='onTransact']" name="managedName">OnTransactImpl</attr>
+  <attr path="/api/package[@name='com.vanstone.appsdk.api.common']/interface[@name='IApnHandler.Stub']/method[@name='onTransact']" name="managedName">OnTransactImpl</attr>
+  <attr path="/api/package[@name='com.vanstone.appsdk.api.cards']/interface[@name='IAt24cXXHandler.Stub']/method[@name='onTransact']" name="managedName">OnTransactImpl</attr>
+  <attr path="/api/package[@name='com.vanstone.appsdk.api.idcard']/interface[@name='IDCardHandler.Stub']/method[@name='onTransact']" name="managedName">OnTransactImpl</attr>
+  
+  <!-- Fix duplicate properties in other classes -->
+  <remove-node path="/api/package[@name='com.vanstone.page.widget.body.custom']/class[@name='KeyBoard']" />
+  <remove-node path="/api/package[@name='com.vanstone.page.widget.body.custom']/class[@name='KeyBoardCCB']" />
+  
+  <!-- Fix obsolete classes -->
+  <remove-node path="/api/package[@name='com.vanstone.page.widget.body.custom']/class[@name='DigitalClock']" />
+  <remove-node path="/api/package[@name='com.vanstone.page.widget.body.custom']/class[@name='DigitalClock1']" />
+</metadata> 

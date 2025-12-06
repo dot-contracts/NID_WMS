@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:wms_android.ViewModels"
+             xmlns:models="clr-namespace:wms_android.shared.Models;assembly=wms_android.shared" 
+             x:DataType="viewModels:DeliveryConfirmationViewModel" 
+             x:Class="wms_android.Views.DeliveryConfirmationView"
+             Title="Confirm Delivery">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="10">
+            
+            <!-- Header -->
+            <Frame Padding="15" BorderColor="#CCC" CornerRadius="5" Margin="0,0,0,15">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Ficma Home Logistics" FontSize="Large" FontAttributes="Bold" HorizontalOptions="Center" />
+                    <Label Text="0707136852 / ficmahomelogistics19@gmail.com" FontSize="Small" HorizontalOptions="Center" />
+                    <BoxView HeightRequest="1" Color="#CCC" Margin="0,5"/>
+                    <Label Text="CONFIRM PARCEL DELIVERY" FontSize="Medium" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,5,0,0"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Status Message -->
+             <Label Text="{Binding StatusMessage}" HorizontalOptions="Center" FontSize="Small" Margin="0,0,0,10"/>
+
+             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Center"/>
+
+            <!-- Receipt Info -->
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" RowSpacing="5" Margin="0,0,0,10">
+                <Label Grid.Row="0" Grid.Column="0" Text="Waybill No:" FontAttributes="Bold"/>
+                <Label Grid.Row="0" Grid.Column="1" Text="{Binding WaybillNumber}" /> 
+                <Label Grid.Row="1" Grid.Column="0" Text="Created:" FontAttributes="Bold"/>
+                <Label Grid.Row="1" Grid.Column="1" Text="{Binding CreatedAt, StringFormat='{0:yyyy-MM-dd HH:mm}'}" />
+            </Grid>
+
+            <BoxView HeightRequest="1" Color="#DDD" Margin="0,5"/>
+
+            <!-- Sender/Receiver -->
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="5" Margin="0,10,0,10">
+                <Label Grid.Row="0" Grid.Column="0" Text="Sender:" FontAttributes="Bold"/>
+                <Label Grid.Row="1" Grid.Column="0" Text="{Binding Sender}" /> 
+
+                <Label Grid.Row="0" Grid.Column="1" Text="Receiver:" FontAttributes="Bold"/>
+                <Label Grid.Row="1" Grid.Column="1" Text="{Binding Receiver}" /> 
+            </Grid>
+
+            <!-- Details Table -->
+             <Label Text="Parcel Details" FontSize="Medium" FontAttributes="Bold" Margin="0,10,0,5"/>
+             <Frame Padding="10" BorderColor="#DDD" CornerRadius="5">
+                 <CollectionView ItemsSource="{Binding DisplayParcels}">
+                     <CollectionView.ItemTemplate>
+                         <DataTemplate x:DataType="models:Parcel">
+                             <Grid ColumnDefinitions="*,Auto,Auto" Padding="5,5" RowSpacing="5">
+                                 <Label Grid.Row="0" Grid.Column="0" Text="{Binding Description, FallbackValue='Parcel Delivery'}" VerticalOptions="Center"/>
+                                 <Label Grid.Row="0" Grid.Column="1" Text="{Binding Quantity, FallbackValue='1'}" HorizontalTextAlignment="End" VerticalOptions="Center"/>
+                                 <Label Grid.Row="0" Grid.Column="2" Text="{Binding TotalAmount, StringFormat='Ksh {0:N2}'}" HorizontalTextAlignment="End" VerticalOptions="Center"/>
+                             </Grid>
+                         </DataTemplate>
+                     </CollectionView.ItemTemplate>
+                     <CollectionView.Header>
+                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="5,0" Margin="0,0,0,5">
+                             <Label Grid.Column="0" Text="Description" FontAttributes="Bold"/>
+                             <Label Grid.Column="1" Text="Qty" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+                             <Label Grid.Column="2" Text="Amount" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+                         </Grid>
+                     </CollectionView.Header>
+                     <CollectionView.EmptyView>
+                         <Label Text="No parcels to display." HorizontalOptions="Center" Margin="10"/>
+                     </CollectionView.EmptyView>
+                 </CollectionView>
+             </Frame>
+
+            <BoxView HeightRequest="1" Color="#DDD" Margin="0,15"/>
+
+            <!-- Totals -->
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="5" Margin="0,10,0,10">
+                <Label Grid.Row="0" Grid.Column="0" Text="Payment Method:" HorizontalOptions="End"/>
+                <Label Grid.Row="0" Grid.Column="1" Text="{Binding PaymentMethod}" FontAttributes="Bold" HorizontalOptions="End"/>
+
+                <Label Grid.Row="1" Grid.Column="0" Text="Total Amount Paid:" FontSize="Medium" FontAttributes="Bold" HorizontalOptions="End"/>
+                <Label Grid.Row="1" Grid.Column="1" Text="{Binding TotalAmount, StringFormat='Ksh {0:N2}'}" FontSize="Medium" FontAttributes="Bold" HorizontalOptions="End"/>
+            </Grid>
+
+            <!-- Action Buttons -->
+            <StackLayout Spacing="10" Margin="0,20,0,0">
+                <!-- Confirm Button -->
+                <Button Text="Confirm Delivery &amp; Print Receipt" 
+                        Command="{Binding ConfirmDeliveryAndPrintCommand}" 
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                        IsVisible="{Binding IsProcessingComplete, Converter={StaticResource InverseBoolConverter}}"
+                        HorizontalOptions="CenterAndExpand" 
+                        WidthRequest="300"
+                        BackgroundColor="#4CAF50" 
+                        TextColor="White" />
+                
+                <!-- Back Button (shown after processing) -->
+                <Button Text="← Back to Delivery" 
+                        Command="{Binding NavigateBackCommand}" 
+                        IsVisible="{Binding IsProcessingComplete}"
+                        HorizontalOptions="CenterAndExpand" 
+                        WidthRequest="300"
+                        BackgroundColor="{StaticResource Primary}" 
+                        TextColor="White" />
+            </StackLayout>
+                    
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage> 
