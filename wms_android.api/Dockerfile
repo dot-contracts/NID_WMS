@@ -8,28 +8,33 @@ ENV ASPNETCORE_URLS=http://+:8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /src
 
-# Copy only project files first for better layer caching
-COPY ["wms_android.api.csproj", "wms_android.api/"]
-COPY ["../wms_android.shared/wms_android.shared.csproj", "wms_android.shared/"]
+# Copy project files first for better layer caching
+# Build context is at the repo root (WMS_Android), so paths are relative to that
+COPY ["wms_android.api/wms_android.api.csproj", "wms_android.api/"]
+COPY ["wms_android.shared/wms_android.shared.csproj", "wms_android.shared/"]
 
 # Set working directory and restore with optimizations
 WORKDIR /src/wms_android.api
 
 # Optimize restore process - reduce memory usage
-RUN dotnet nuget locals all --clear && \
+RUN echo "=== Restoring NuGet packages ===" && \
+    dotnet nuget locals all --clear && \
     dotnet restore "wms_android.api.csproj" \
     --verbosity minimal \
     --no-cache \
-    --disable-parallel
+    --disable-parallel || (echo "ERROR: Restore failed!" && exit 1)
 
-# Copy source code (only what we need)
+# Copy source code
 WORKDIR /src
-COPY ["./", "wms_android.api/"]
-COPY ["../wms_android.shared/", "wms_android.shared/"]
+RUN echo "=== Copying source files ===" && \
+    ls -la /src || echo "Source directory listing failed"
+COPY ["wms_android.api/", "wms_android.api/"]
+COPY ["wms_android.shared/", "wms_android.shared/"]
 
 # Build and publish in one step to avoid file missing issues
 WORKDIR /src/wms_android.api
-RUN dotnet publish "wms_android.api.csproj" \
+RUN echo "Building and publishing application..." && \
+    dotnet publish "wms_android.api.csproj" \
     -c Release \
     -o /app/publish \
     --verbosity minimal \
@@ -39,7 +44,7 @@ RUN dotnet publish "wms_android.api.csproj" \
     /p:PublishSingleFile=false \
     /p:UseSharedCompilation=false \
     /p:BuildInParallel=false \
-    /maxcpucount:1
+    /maxcpucount:1 || (echo "Build failed!" && exit 1)
 
 FROM base AS final
 WORKDIR /app

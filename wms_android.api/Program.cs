@@ -21,7 +21,10 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Configuration is automatically loaded from appsettings.json and appsettings.{Environment}.json
+        Console.WriteLine($"=== Application Starting ===");
         Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+        Console.WriteLine($"Working Directory: {Directory.GetCurrentDirectory()}");
+        Console.WriteLine($"Content Root: {builder.Environment.ContentRootPath}");
 
         // Add services to container
         builder.Services.AddControllers().AddJsonOptions(options =>
@@ -35,17 +38,39 @@ public class Program
         // Register services
         builder.Services.AddScoped<IParcelService, ApiParcelService>();
 
-        // Configure database using connection string from appsettings
+        // Configure database using connection string from appsettings or environment variables
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        
+        // If connection string is not set, build it from individual DB_* environment variables
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            var dbHost = builder.Configuration["DB_HOST"] ?? Environment.GetEnvironmentVariable("DB_HOST");
+            var dbPort = builder.Configuration["DB_PORT"] ?? Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
+            var dbName = builder.Configuration["DB_NAME"] ?? Environment.GetEnvironmentVariable("DB_NAME");
+            var dbUser = builder.Configuration["DB_USER"] ?? Environment.GetEnvironmentVariable("DB_USER");
+            var dbPassword = builder.Configuration["DB_PASSWORD"] ?? Environment.GetEnvironmentVariable("DB_PASSWORD");
+            
+            if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbName) && 
+                !string.IsNullOrEmpty(dbUser) && !string.IsNullOrEmpty(dbPassword))
+            {
+                connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Min Pool Size=5;Max Pool Size=100;Connection Lifetime=0;Command Timeout=30;Timeout=30;Keepalive=60";
+                Console.WriteLine($"Built connection string from environment variables (Host: {dbHost}, Database: {dbName})");
+            }
+            else
+            {
+                throw new InvalidOperationException("Database connection string is not configured. Either set ConnectionStrings__DefaultConnection or provide DB_HOST, DB_NAME, DB_USER, and DB_PASSWORD environment variables.");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Using connection string from configuration");
+        }
 
         // Configure Npgsql to use timestamps with time zone by default
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
-
-        // Log the connection attempt (without sensitive info)
-        Console.WriteLine($"Using connection string from configuration");
 
         // Add Health Checks with the explicit connection string
         builder.Services.AddHealthChecks()
@@ -101,13 +126,19 @@ public class Program
 
             try
             {
+                logger.LogInformation("Attempting to connect to database and apply migrations...");
                 dbContext.Database.Migrate();
                 logger.LogInformation("Database migration completed successfully");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while migrating the database");
-                throw;
+                logger.LogError(ex, "An error occurred while migrating the database. Error: {Message}", ex.Message);
+                logger.LogError("Stack trace: {StackTrace}", ex.StackTrace);
+                // Don't throw in production to allow app to start even if migrations fail
+                if (app.Environment.IsDevelopment())
+                {
+                    throw;
+                }
             }
         }
 
