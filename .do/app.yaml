@@ -1,0 +1,33 @@
+name: nid-wms-api
+services:
+- name: api
+  source_dir: /wms_android.api
+  github:
+    repo: your-github-username/NID_WMS
+    branch: main
+  run_command: dotnet wms_android.api.dll
+  environment_slug: dotnet
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: ASPNETCORE_ENVIRONMENT
+    value: Production
+  - key: DB_HOST
+    value: 209.38.121.208
+  - key: DB_PORT
+    value: "5432"
+  - key: DB_NAME
+    value: NID_WMS
+  - key: DB_USER
+    value: nid_user
+  - key: DB_PASSWORD
+    value: 2025@_1Nid
+  - key: JWT_SECRET
+    value: 36cd93e4947c4a92917c18a7da820e9b
+  - key: API_BASE_URL
+    value: https://nid-wms-api-xxxxx.ondigitalocean.app
+  health_check:
+    http_path: /health
+  http_port: 8080
+  routes:
+  - path: /

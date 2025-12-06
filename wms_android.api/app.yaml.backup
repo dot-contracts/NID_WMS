@@ -1,0 +1,67 @@
+alerts:
+- rule: DEPLOYMENT_FAILED
+- rule: DOMAIN_FAILED
+name: wmsandroidapi
+region: blr
+features:
+- buildpack-stack=ubuntu-22
+services:
+- name: wms-android-wms-android-api
+  github:
+    repo: dot-contracts/WMS_Android
+    branch: aisino
+    deploy_on_push: true
+  dockerfile_path: wms_android.api/Dockerfile
+  http_port: 8080
+  health_check:
+    http_path: /health
+    initial_delay_seconds: 30
+    period_seconds: 10
+  instance_count: 1
+  instance_size_slug: apps-s-1vcpu-0.5gb
+  envs:
+    # API Settings
+    - key: ASPNETCORE_ENVIRONMENT
+      scope: RUN_AND_BUILD_TIME
+      value: Production
+    - key: ASPNETCORE_URLS
+      scope: RUN_AND_BUILD_TIME
+      value: http://+:8080
+    - key: PORT
+      scope: RUN_AND_BUILD_TIME
+      value: "8080"
+
+    # Database Configuration - Digital Ocean PostgreSQL
+    - key: ConnectionStrings__DefaultConnection
+      scope: RUN_AND_BUILD_TIME
+      type: SECRET
+      value: Host=209.38.121.208;Port=5432;Database=NID_WMS;Username=nid_user;Password=2025@_1Nid;SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Min Pool Size=5;Max Pool Size=100;Connection Lifetime=0;Command Timeout=30;Timeout=30;Keepalive=60
+
+    # JWT Configuration
+    - key: JWT__Secret
+      scope: RUN_AND_BUILD_TIME
+      type: SECRET
+      value: fylcgkjrPuKMDU84pKuHNazEJ2YPVEXbR7H9yjwOJJk=
+    - key: JWT__ExpiryInDays
+      scope: RUN_AND_BUILD_TIME
+      value: "7"
+
+    # Logging Configuration
+    - key: Logging__LogLevel__Default
+      scope: RUN_AND_BUILD_TIME
+      value: Information
+    - key: Logging__LogLevel__Microsoft
+      scope: RUN_AND_BUILD_TIME
+      value: Warning
+
+    # CORS Settings
+    - key: AllowedOrigins
+      scope: RUN_AND_BUILD_TIME
+      value: "*"
+ingress:
+  rules:
+  - component:
+      name: wms-android-wms-android-api
+    match:
+      path:
+        prefix: /

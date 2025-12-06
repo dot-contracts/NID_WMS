@@ -71,15 +71,22 @@ namespace wms_android
             // Create HttpClient for API access
             builder.Services.AddTransient<HttpClient>(sp => {
                 var client = new HttpClient();
-                var baseUrl = configuration["ApiSettings:BaseUrl"];
+                var baseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5053/";
+                
                 // Ensure baseUrl doesn't include "/api"
                 if (baseUrl.EndsWith("/api/")) {
                     baseUrl = baseUrl.Substring(0, baseUrl.Length - 5);
                 } else if (baseUrl.EndsWith("/api")) {
                     baseUrl = baseUrl.Substring(0, baseUrl.Length - 4);
                 }
-                client.BaseAddress = new Uri(baseUrl);
-                System.Diagnostics.Debug.WriteLine($"Configured HttpClient with BaseAddress: {baseUrl}");
+                
+                try {
+                    client.BaseAddress = new Uri(baseUrl);
+                    System.Diagnostics.Debug.WriteLine($"Configured HttpClient with BaseAddress: {baseUrl}");
+                } catch (Exception ex) {
+                    System.Diagnostics.Debug.WriteLine($"Error setting BaseAddress: {ex.Message}");
+                    client.BaseAddress = new Uri("http://localhost:5053/");
+                }
                 return client;
             });
                 
@@ -121,25 +128,9 @@ namespace wms_android
             builder.Services.AddTransient<wms_android.Services.CS30PrinterService>();
             builder.Services.AddTransient<wms_android.Services.VanstonePrinterService>();
             
-            // --- Conditionally register IScannerService based on detected device ---
-            // Build temporary provider to resolve IDeviceDetectionService
-            var tempServiceProvider = builder.Services.BuildServiceProvider();
-            var deviceDetector = tempServiceProvider.GetRequiredService<wms_android.Interfaces.IDeviceDetectionService>();
-            var deviceType = deviceDetector.DetectDevice();
-            
-            System.Diagnostics.Debug.WriteLine($"Detected device type: {deviceType}. Registering appropriate IScannerService and IPrinterService.");
-
-            if (deviceType == wms_android.shared.Models.PosDeviceType.A90)
-            {
-                builder.Services.AddSingleton<wms_android.Interfaces.IScannerService, wms_android.Services.VanstoneScannerService>();
-                System.Diagnostics.Debug.WriteLine("Registered VanstoneScannerService for A90 device.");
-            }
-            else // Default to CS30 (or handle other types if needed)
-            {
-                builder.Services.AddSingleton<wms_android.Interfaces.IScannerService, wms_android.Services.Cs30ScannerService>();
-                System.Diagnostics.Debug.WriteLine("Registered Cs30ScannerService for CS30 or default device.");
-            }
-            // --- End conditional IScannerService registration ---
+            // Register default scanner service - device detection will happen at runtime
+            builder.Services.AddSingleton<wms_android.Interfaces.IScannerService, wms_android.Services.Cs30ScannerService>();
+            System.Diagnostics.Debug.WriteLine("Registered Cs30ScannerService as default scanner service.");
             
             // Register other singletons
             builder.Services.AddSingleton<wms_android.Interfaces.IDialogService, wms_android.Services.DialogService>();

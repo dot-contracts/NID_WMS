@@ -9,6 +9,7 @@ using wms_android.Views; // Added for navigation to ReceiptView
 using System.Collections.Generic; // Added for navigation parameters
 using wms_android.shared.Models; // Added for Parcel type
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace wms_android.ViewModels
 {
@@ -157,12 +158,21 @@ namespace wms_android.ViewModels
             IsBusy = true;
             ScannedResult = null; // Clear any previous scan result
             ShowScannedResult = false;
-            StatusMessage = $"Looking up Waybill: {ManualWaybillNumber}...";
-            Debug.WriteLine($"Looking up Waybill: {ManualWaybillNumber}");
+
+            // Auto-prefix with NID if user entered only alphanumeric characters (no NID prefix)
+            string waybillToLookup = ManualWaybillNumber.Trim().ToUpper();
+            if (!waybillToLookup.StartsWith("NID") && Regex.IsMatch(waybillToLookup, @"^[A-Z0-9]+$"))
+            {
+                waybillToLookup = $"NID{waybillToLookup}";
+                Debug.WriteLine($"Auto-prefixed waybill: {ManualWaybillNumber} -> {waybillToLookup}");
+            }
+
+            StatusMessage = $"Looking up Waybill: {waybillToLookup}...";
+            Debug.WriteLine($"Looking up Waybill: {waybillToLookup}");
 
             try
             {
-                var parcel = await _parcelService.GetParcelByWaybillNumberAsync(ManualWaybillNumber);
+                var parcel = await _parcelService.GetParcelByWaybillNumberAsync(waybillToLookup);
 
                 if (parcel != null)
                 {

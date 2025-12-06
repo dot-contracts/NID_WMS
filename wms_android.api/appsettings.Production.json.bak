@@ -1,0 +1,31 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=${DB_HOST};Port=${DB_PORT};Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD};SSL Mode=Require;Trust Server Certificate=true"
+  },
+  "JwtConfig": {
+    "Secret": "${JWT_SECRET}",
+    "Issuer": "wms_android.api",
+    "Audience": "wms_android.client",
+    "ExpiryInDays": 7,
+    "ExpirationInMinutes": 60
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.AspNetCore.Hosting": "Warning",
+      "Microsoft.AspNetCore.Routing": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "Cors": {
+    "AllowedOrigins": [
+      "https://www.system.ficma.co.ke",
+      "https://wms-dispatch-app-pi36f.ondigitalocean.app"
+    ]
+  },
+  "ApiSettings": {
+    "BaseUrl": "${API_BASE_URL}"
+  },
+  "UseRemoteServices": true
+}

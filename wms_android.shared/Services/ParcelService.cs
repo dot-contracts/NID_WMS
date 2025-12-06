@@ -22,7 +22,7 @@ namespace wms_android.shared.Services
         public ParcelService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5000";  // Changed fallback from production to localhost
+            _baseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5053";  // Changed fallback from production to localhost
             
             // Configure HttpClient
             _httpClient.BaseAddress = new Uri(_baseUrl);
@@ -211,7 +211,7 @@ namespace wms_android.shared.Services
         {
             try
             {
-                // Generate a waybill number locally with the format "WB" + 5 random alphanumeric characters
+                // Generate a waybill number locally with the format "NID" + 5 random alphanumeric characters
                 System.Diagnostics.Debug.WriteLine("Generating local waybill number...");
                 
                 const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -219,7 +219,7 @@ namespace wms_android.shared.Services
                 var randomString = new string(Enumerable.Repeat(chars, 5)
                     .Select(s => s[random.Next(s.Length)]).ToArray());
                 
-                var waybillNumber = $"WB{randomString}";
+                var waybillNumber = $"NID{randomString}";
                 
                 System.Diagnostics.Debug.WriteLine($"Generated waybill number: {waybillNumber}");
                 return waybillNumber;

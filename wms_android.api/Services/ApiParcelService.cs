@@ -196,7 +196,7 @@ namespace wms_android.api.Services
         {
             var today = DateTime.UtcNow.Date;
             var count = await _context.Shipments.CountAsync(s => s.CreatedAt.Date == today && s.WaybillNumber != null);
-            var waybillNumber = $"WB{today:yyyyMMdd}{(count + 1 + attemptOffset).ToString("D4")}";
+            var waybillNumber = $"NID{today:yyyyMMdd}{(count + 1 + attemptOffset).ToString("D4")}";
             System.Diagnostics.Debug.WriteLine($"Generated potential WaybillNumber for Shipment: {waybillNumber} (Attempt offset: {attemptOffset})");
             return waybillNumber;
         }
