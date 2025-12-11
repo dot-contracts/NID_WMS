@@ -13,6 +13,7 @@ import CreateDispatch from './pages/CreateDispatch';
 import ViewDispatch from './pages/ViewDispatch';
 import ContractCustomers from './pages/ContractCustomers';
 import Invoices from './pages/Invoices';
+import CreateInvoice from './pages/CreateInvoice';
 import FinancialDashboard from './pages/FinancialDashboard';
 import PaymentsManagement from './pages/PaymentsManagement';
 import ExpensesManagement from './pages/ExpensesManagement';
@@ -158,6 +159,16 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <ModernLayout>
                   <Invoices />
+                </ModernLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/invoices/create"
+            element={
+              <ProtectedRoute>
+                <ModernLayout>
+                  <CreateInvoice />
                 </ModernLayout>
               </ProtectedRoute>
             }

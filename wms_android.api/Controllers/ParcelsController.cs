@@ -367,7 +367,7 @@ namespace wms_android.api.Controllers
                     query = query.Where(p => p.Destination == destination);
                 }
 
-                // Handle status filtering - support multiple statuses (Pending, Finalized)
+                // Handle status filtering - support multiple statuses (Pending, Confirmed)
                 if (!string.IsNullOrEmpty(statuses))
                 {
                     var statusList = statuses.Split(',').Select(s => Enum.Parse<ParcelStatus>(s.Trim())).ToList();
@@ -375,8 +375,8 @@ namespace wms_android.api.Controllers
                 }
                 else
                 {
-                    // Default to pending and finalized for dispatch
-                    query = query.Where(p => p.Status == ParcelStatus.Pending || p.Status == ParcelStatus.Finalized);
+                    // Default to pending and confirmed for dispatch
+                    query = query.Where(p => p.Status == ParcelStatus.Pending || p.Status == ParcelStatus.Confirmed);
                 }
 
                 // Date filtering - limit to 2 days by default

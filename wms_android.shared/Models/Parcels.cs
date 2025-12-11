@@ -73,7 +73,7 @@ namespace wms_android.shared.Models
     public enum ParcelStatus
     {
         Pending,
-        Finalized,
+        Confirmed,
         InTransit,
         Delivered,
         Cancelled

@@ -34,7 +34,7 @@ const PARCEL_STATUS = {
 
 const STATUS_LABELS: Record<number, string> = {
   [PARCEL_STATUS.PENDING]: 'Pending',
-  [PARCEL_STATUS.FINALIZED]: 'Finalized',
+  [PARCEL_STATUS.FINALIZED]: 'Confirmed',
   [PARCEL_STATUS.IN_TRANSIT]: 'In Transit',
   [PARCEL_STATUS.DELIVERED]: 'Delivered',
   [PARCEL_STATUS.CANCELLED]: 'Cancelled'
@@ -137,7 +137,7 @@ const AdminParcelManagement: React.FC = () => {
       options: [
         { value: '', label: 'All Statuses' },
         { value: 'pending', label: 'Pending' },
-        { value: 'finalized', label: 'Finalized' },
+        { value: 'confirmed', label: 'Confirmed' },
         { value: 'in-transit', label: 'In Transit' },
         { value: 'delivered', label: 'Delivered' },
         { value: 'cancelled', label: 'Cancelled' }
@@ -271,7 +271,7 @@ const AdminParcelManagement: React.FC = () => {
     if (filters.status && filters.status !== 'all') {
       const statusMap: Record<string, number> = {
         'pending': PARCEL_STATUS.PENDING,
-        'finalized': PARCEL_STATUS.FINALIZED,
+        'confirmed': PARCEL_STATUS.FINALIZED,
         'in-transit': PARCEL_STATUS.IN_TRANSIT,
         'delivered': PARCEL_STATUS.DELIVERED,
         'cancelled': PARCEL_STATUS.CANCELLED

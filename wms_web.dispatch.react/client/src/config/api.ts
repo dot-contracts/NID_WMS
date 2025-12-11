@@ -14,14 +14,13 @@ const getApiBaseUrl = (): string => {
     return envUrl;
   }
   
-  // Fallback: use proxy in development, production URL otherwise
+  // Fallback: use localhost in development, production URL otherwise
   if (process.env.NODE_ENV === 'development') {
-    return '/api';
+    return 'http://localhost:5053/api';  // Local .NET API
   }
 
   // Important: production API is under /api path
   return 'https://plankton-app-d86df.ondigitalocean.app/api';  // Production URL
-  // return 'http://localhost:5000/api';  // Development URL - commented out
 };
 
 /**

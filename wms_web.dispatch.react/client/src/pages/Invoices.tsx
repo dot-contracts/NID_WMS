@@ -17,8 +17,12 @@ import {
 } from 'lucide-react';
 import { Card, Button, Badge, Table, Input, Modal, Select } from '../components/ui';
 import { VirtualScrollTable } from '../components/VirtualScrollTable';
-import { wmsApi, Invoice, ContractCustomer, CreateInvoiceDto } from '../services/wmsApi';
+import { InvoiceViewModal } from '../components/InvoiceViewModal';
+import { PaymentModal } from '../components/PaymentModal';
+import { printInvoice } from '../components/InvoicePrintView';
+import { wmsApi, Invoice, ContractCustomer } from '../services/wmsApi';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface InvoiceFilters {
   search: string;
@@ -27,8 +31,10 @@ interface InvoiceFilters {
   dateRange: string;
 }
 
+
 const Invoices: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [contractCustomers, setContractCustomers] = useState<ContractCustomer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,8 +45,8 @@ const Invoices: React.FC = () => {
     contractCustomerId: '',
     dateRange: ''
   });
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   useEffect(() => {
@@ -86,16 +92,18 @@ const Invoices: React.FC = () => {
       sent: { color: 'blue' as const, icon: FileText },
       paid: { color: 'green' as const, icon: CheckCircle },
       overdue: { color: 'red' as const, icon: AlertCircle },
-      cancelled: { color: 'red' as const, icon: AlertCircle }
+      cancelled: { color: 'red' as const, icon: AlertCircle },
+      partial: { color: 'yellow' as const, icon: Clock }
     };
     
-    const config = statusConfig[status];
+    // Fallback for unknown statuses
+    const config = statusConfig[status] || { color: 'gray' as const, icon: AlertCircle };
     const Icon = config.icon;
     
     return (
       <Badge color={config.color} className="flex items-center gap-1">
         <Icon className="w-3 h-3" />
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown'}
       </Badge>
     );
   };
@@ -156,7 +164,7 @@ const Invoices: React.FC = () => {
       header: 'Billing Period',
       render: (invoice: Invoice) => (
         <div className="text-sm">
-          {formatDate(invoice.billingPeriod.start)} - {formatDate(invoice.billingPeriod.end)}
+          {formatDate(invoice.billingPeriodStart)} - {formatDate(invoice.billingPeriodEnd)}
         </div>
       )
     },
@@ -205,8 +213,9 @@ const Invoices: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setSelectedInvoice(invoice)}
+            onClick={() => handleViewInvoice(invoice)}
             className="p-2"
+            title="View Invoice Details"
           >
             <Eye className="w-4 h-4" />
           </Button>
@@ -214,11 +223,9 @@ const Invoices: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                setSelectedInvoice(invoice);
-                setShowPaymentModal(true);
-              }}
+              onClick={() => handlePaymentClick(invoice)}
               className="p-2"
+              title="Record Payment"
             >
               <DollarSign className="w-4 h-4" />
             </Button>
@@ -228,6 +235,7 @@ const Invoices: React.FC = () => {
             size="sm"
             onClick={() => handlePrintInvoice(invoice)}
             className="p-2"
+            title="Print Invoice"
           >
             <Printer className="w-4 h-4" />
           </Button>
@@ -237,11 +245,38 @@ const Invoices: React.FC = () => {
   ];
 
   const handleCreateInvoice = () => {
-    setShowCreateModal(true);
+    navigate('/invoices/create');
+  };
+
+  const handleViewInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setShowViewModal(true);
+  };
+
+  const handlePaymentClick = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setShowPaymentModal(true);
   };
 
   const handlePrintInvoice = (invoice: Invoice) => {
-    window.print();
+    printInvoice(invoice);
+  };
+
+  const handleRecordPayment = async (paymentData: any) => {
+    try {
+      await wmsApi.recordInvoicePayment(paymentData.invoiceId, {
+        amount: paymentData.amount,
+        paymentMethod: paymentData.paymentMethod,
+        paymentDate: paymentData.paymentDate,
+        paymentReference: paymentData.paymentReference,
+        notes: paymentData.notes
+      });
+      
+      // Reload invoices to get updated data
+      await loadData();
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to record payment');
+    }
   };
 
   if (isLoading) {
@@ -383,6 +418,32 @@ const Invoices: React.FC = () => {
           className="border-0"
         />
       </Card>
+
+      {/* Invoice View Modal */}
+      <InvoiceViewModal
+        invoice={selectedInvoice}
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedInvoice(null);
+        }}
+        onPrint={() => {
+          if (selectedInvoice) {
+            handlePrintInvoice(selectedInvoice);
+          }
+        }}
+      />
+
+      {/* Payment Modal */}
+      <PaymentModal
+        invoice={selectedInvoice}
+        isOpen={showPaymentModal}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setSelectedInvoice(null);
+        }}
+        onPaymentRecord={handleRecordPayment}
+      />
     </div>
   );
 };

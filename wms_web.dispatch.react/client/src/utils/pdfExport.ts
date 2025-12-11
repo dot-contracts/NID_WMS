@@ -83,7 +83,7 @@ export const exportParcelsToPDF = (parcels: Parcel[], options: ExportOptions = {
   function getStatusLabel(status: number): string {
     const statusMap = {
       0: 'Pending',
-      1: 'Finalized', 
+      1: 'Confirmed', 
       2: 'In Transit',
       3: 'Delivered',
       4: 'Cancelled'
@@ -218,7 +218,7 @@ export const generateFilterSummary = (filters: any): string => {
   if (filters.status && filters.status !== 'all') {
     const statusMap: Record<string, string> = {
       '0': 'Pending',
-      '1': 'Finalized',
+      '1': 'Confirmed',
       '2': 'In Transit', 
       '3': 'Delivered',
       '4': 'Cancelled'

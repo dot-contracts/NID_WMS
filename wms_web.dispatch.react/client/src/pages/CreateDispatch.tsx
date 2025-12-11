@@ -50,7 +50,7 @@ const CreateDispatch: React.FC = () => {
 
   const [filters, setFilters] = useState<ParcelFilterState>({
     search: '',
-    status: '', // Show all valid statuses (Pending and Finalized) by default
+    status: '', // Show all valid statuses (Pending and Confirmed) by default
     destination: '',
     createdBy: '',
     dateFrom: '',
@@ -280,7 +280,7 @@ const CreateDispatch: React.FC = () => {
       options: [
         { value: '', label: 'All Valid Statuses' },
         { value: '0', label: 'Pending' },
-        { value: '1', label: 'Finalized' }
+        { value: '1', label: 'Confirmed' }
       ]
     },
     {

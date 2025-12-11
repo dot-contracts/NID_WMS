@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  CreditCard, 
-  FileText, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  CreditCard,
+  FileText,
   AlertTriangle,
   Building2,
   Users,
@@ -21,6 +21,7 @@ import { useAuth } from '../context/AuthContext';
 interface FinancialSummary {
   totalRevenue: number;
   monthlyRevenue: number;
+  dailySales: number;
   outstandingInvoices: number;
   overdueAmount: number;
   codTotal: number;
@@ -41,6 +42,7 @@ const FinancialDashboard: React.FC = () => {
   const [summary, setSummary] = useState<FinancialSummary>({
     totalRevenue: 0,
     monthlyRevenue: 0,
+    dailySales: 0,
     outstandingInvoices: 0,
     overdueAmount: 0,
     codTotal: 0,
@@ -58,7 +60,7 @@ const FinancialDashboard: React.FC = () => {
   const loadFinancialData = async () => {
     try {
       setIsLoading(true);
-      
+
       // Load invoices and calculate financial metrics
       const [invoices, parcels] = await Promise.all([
         wmsApi.getInvoices(),
@@ -70,21 +72,32 @@ const FinancialDashboard: React.FC = () => {
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
 
-      const totalRevenue = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-      const monthlyRevenue = invoices
-        .filter(inv => {
-          const invDate = new Date(inv.issueDate);
-          return invDate.getMonth() === currentMonth && invDate.getFullYear() === currentYear;
+      const totalRevenue = parcels.reduce((sum, p) => sum + (p.totalAmount || 0), 0);
+      const monthlyRevenue = parcels
+        .filter(p => {
+          if (!p.createdAt) return false;
+          const pDate = new Date(p.createdAt);
+          return pDate.getMonth() === currentMonth && pDate.getFullYear() === currentYear;
         })
-        .reduce((sum, inv) => sum + inv.totalAmount, 0);
+        .reduce((sum, p) => sum + (p.totalAmount || 0), 0);
+
+      // Calculate daily sales (current day from parcels)
+      const today = new Date().toISOString().split('T')[0];
+      const dailySales = parcels
+        .filter(p => {
+          if (!p.createdAt) return false;
+          const parcelDate = new Date(p.createdAt).toISOString().split('T')[0];
+          return parcelDate === today;
+        })
+        .reduce((sum, p) => sum + p.totalAmount, 0);
 
       const outstandingInvoices = invoices
         .filter(inv => inv.status !== 'paid')
         .reduce((sum, inv) => sum + (inv.totalAmount - inv.paidAmount), 0);
 
       const overdueAmount = invoices
-        .filter(inv => 
-          inv.status === 'overdue' || 
+        .filter(inv =>
+          inv.status === 'overdue' ||
           (inv.status === 'sent' && new Date(inv.dueDate) < now)
         )
         .reduce((sum, inv) => sum + (inv.totalAmount - inv.paidAmount), 0);
@@ -105,6 +118,7 @@ const FinancialDashboard: React.FC = () => {
       setSummary({
         totalRevenue,
         monthlyRevenue,
+        dailySales,
         outstandingInvoices,
         overdueAmount,
         codTotal,
@@ -117,12 +131,13 @@ const FinancialDashboard: React.FC = () => {
       const chartData: RevenueData[] = [];
       for (let i = 5; i >= 0; i--) {
         const date = new Date(currentYear, currentMonth - i, 1);
-        const monthRevenue = invoices
-          .filter(inv => {
-            const invDate = new Date(inv.issueDate);
-            return invDate.getMonth() === date.getMonth() && invDate.getFullYear() === date.getFullYear();
+        const monthRevenue = parcels
+          .filter(p => {
+            if (!p.createdAt) return false;
+            const pDate = new Date(p.createdAt);
+            return pDate.getMonth() === date.getMonth() && pDate.getFullYear() === date.getFullYear();
           })
-          .reduce((sum, inv) => sum + inv.totalAmount, 0);
+          .reduce((sum, p) => sum + (p.totalAmount || 0), 0);
 
         chartData.push({
           month: date.toLocaleDateString('en-US', { month: 'short' }),
@@ -213,7 +228,7 @@ const FinancialDashboard: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Financial Dashboard</h1>
           <p className="text-gray-600 mt-1">Overview of your warehouse financial performance</p>
         </div>
-        <Button 
+        <Button
           onClick={loadFinancialData}
           className="flex items-center space-x-2"
           variant="outline"
@@ -224,7 +239,7 @@ const FinancialDashboard: React.FC = () => {
       </div>
 
       {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -236,6 +251,17 @@ const FinancialDashboard: React.FC = () => {
               </div>
             </div>
             <DollarSign className="w-8 h-8 text-green-500" />
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Today's Sales</p>
+              <p className="text-2xl font-bold text-blue-900">{formatCurrency(summary.dailySales)}</p>
+              <p className="text-sm text-gray-500 mt-1">Current day total</p>
+            </div>
+            <Calendar className="w-8 h-8 text-blue-500" />
           </div>
         </Card>
 
@@ -336,10 +362,9 @@ const FinancialDashboard: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-medium text-gray-900">{formatCurrency(invoice.totalAmount)}</p>
-                  <p className={`text-sm ${
-                    invoice.status === 'paid' ? 'text-green-600' : 
-                    invoice.status === 'overdue' ? 'text-red-600' : 'text-yellow-600'
-                  }`}>
+                  <p className={`text-sm ${invoice.status === 'paid' ? 'text-green-600' :
+                      invoice.status === 'overdue' ? 'text-red-600' : 'text-yellow-600'
+                    }`}>
                     {invoice.status}
                   </p>
                 </div>

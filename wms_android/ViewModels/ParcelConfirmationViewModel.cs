@@ -396,20 +396,20 @@ namespace wms_android.ViewModels
 
                 IsLoading = true;
 
-                // Update parcel status to Finalized
+                // Update parcel status to Confirmed
                 foreach (var item in confirmedItems)
                 {
-                    item.Parcel.Status = ParcelStatus.Finalized;
+                    item.Parcel.Status = ParcelStatus.Confirmed;
                     await _parcelService.UpdateParcelAsync(item.Parcel);
                 }
 
                 await Application.Current.MainPage.DisplayAlert("Success", 
-                    $"{confirmedItems.Count} parcels have been finalized successfully by {GetUserDisplayName(SelectedManager)}", "OK");
+                    $"{confirmedItems.Count} parcels have been confirmed successfully by {GetUserDisplayName(SelectedManager)}", "OK");
 
                 // Reload data to refresh the view
                 await LoadDataAsync();
 
-                _logger.LogInformation($"Finalized {confirmedItems.Count} confirmed parcels by verified confirmer {SelectedManager.Username}");
+                _logger.LogInformation($"Confirmed {confirmedItems.Count} confirmed parcels by verified confirmer {SelectedManager.Username}");
             }
             catch (Exception ex)
             {

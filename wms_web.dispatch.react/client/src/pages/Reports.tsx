@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { wmsApi, Parcel, Dispatch, ParcelDepositDto } from '../services/wmsApi';
-import { 
-  BarChart, 
+import {
+  BarChart,
   LineChart,
   TrendingUp,
   TrendingDown,
@@ -167,9 +167,9 @@ interface UserDailySales {
   dailySales: DailySalesData[];
 }
 
-type ReportType = 
+type ReportType =
   | 'dashboard'
-  | 'sales-per-clerk' 
+  | 'sales-per-clerk'
   | 'contract-invoices'
   | 'undelivered-parcels'
   | 'cod-delivered'
@@ -189,13 +189,13 @@ const Reports: React.FC = () => {
   const [parcelListLoading, setParcelListLoading] = useState(false);
   const [showParcelFilters, setShowParcelFilters] = useState(false);
   const [destinations, setDestinations] = useState<string[]>([]);
-  const [clerks, setClerks] = useState<{id: number, username: string}[]>([]);
+  const [clerks, setClerks] = useState<{ id: number, username: string }[]>([]);
   const [userCache, setUserCache] = useState<Map<number, string>>(new Map());
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [selectedBranchDebit, setSelectedBranchDebit] = useState<BranchDebitData | null>(null);
   const [depositAmount, setDepositAmount] = useState('');
-  const [branchDebitData, setBranchDebitData] = useState<{[key: string]: BranchDebitSummary}>({});
-  
+  const [branchDebitData, setBranchDebitData] = useState<{ [key: string]: BranchDebitSummary }>({});
+
   // Cash-in related state
   const [salesPerClerkTab, setSalesPerClerkTab] = useState<'performance' | 'cash-in' | 'daily-sales'>('performance');
   const [clerkCashInData, setClerkCashInData] = useState<ClerkCashInData[]>([]);
@@ -210,7 +210,7 @@ const Reports: React.FC = () => {
   const [activeBranchTab, setActiveBranchTab] = useState<string>('');
   const [loadingDeposits, setLoadingDeposits] = useState(false);
   const [savingDeposit, setSavingDeposit] = useState(false);
-  
+
   // Clerk Debit related state
   const [clerkDebitData, setClerkDebitData] = useState<ClerkDebitData[]>([]);
   const [debitDateRange, setDebitDateRange] = useState({
@@ -228,7 +228,7 @@ const Reports: React.FC = () => {
     to: new Date().toISOString().split('T')[0]
   });
   const [loadingDailySales, setLoadingDailySales] = useState(false);
-  
+
   const [filters, setFilters] = useState<ReportFilters>({
     startDate: '',
     endDate: '',
@@ -261,16 +261,16 @@ const Reports: React.FC = () => {
     let enhanced = filteredParcels.map(parcel => ({
       ...parcel,
       // Use cached user display name if available
-      clerkDisplayName: userCache.get(parcel.createdById) || 
-                       parcel.createdBy?.username || 
-                       `User ${parcel.createdById}`,
+      clerkDisplayName: userCache.get(parcel.createdById) ||
+        parcel.createdBy?.username ||
+        `User ${parcel.createdById}`,
       // Pre-format currency for better performance
       formattedAmount: formatCurrency(parcel.totalAmount)
     }));
 
     // Apply client-side filters for better responsiveness
     if (parcelFilters.paymentMethod) {
-      enhanced = enhanced.filter(parcel => 
+      enhanced = enhanced.filter(parcel =>
         parcel.paymentMethods?.toLowerCase().includes(parcelFilters.paymentMethod.toLowerCase())
       );
     }
@@ -315,6 +315,13 @@ const Reports: React.FC = () => {
       categories: [] as string[],
       title: {
         text: 'Clerks'
+      },
+      labels: {
+        rotate: -45,
+        rotateAlways: true,
+        style: {
+          fontSize: '12px'
+        }
       }
     },
     yaxis: {
@@ -436,9 +443,9 @@ const Reports: React.FC = () => {
     try {
       // Always start by getting all paid parcels from the main API
       const allParcels = await wmsApi.getParcels();
-      
+
       // Filter for paid parcels and by date if specified
-      let paidParcels = allParcels.filter(parcel => 
+      let paidParcels = allParcels.filter(parcel =>
         parcel.paymentMethods?.toLowerCase().includes('paid')
       );
 
@@ -473,22 +480,22 @@ const Reports: React.FC = () => {
 
       // Get users to populate clerk information
       const users = await wmsApi.getUsers();
-      
+
       // Group parcels by clerk
       const clerkData: Record<number, ClerkCashInData> = {};
-      
+
       paidParcels.forEach(parcel => {
         const clerkId = parcel.createdById;
         if (!clerkId) return;
-        
+
         const clerk = users.find(u => u.id === clerkId);
         if (!clerk) return;
-        
+
         if (!clerkData[clerkId]) {
           clerkData[clerkId] = {
             clerkId: clerkId,
-            clerkName: clerk.firstName && clerk.lastName 
-              ? `${clerk.firstName} ${clerk.lastName}` 
+            clerkName: clerk.firstName && clerk.lastName
+              ? `${clerk.firstName} ${clerk.lastName}`
               : clerk.username,
             clerkUsername: clerk.username,
             totalPaidAmount: 0,
@@ -498,11 +505,11 @@ const Reports: React.FC = () => {
             parcels: []
           };
         }
-        
+
         // Check for deposit/expense data from database only
         let depositedAmount = 0;
         let expenses = 0;
-        
+
         const dbDeposit = depositsMap[parcel.id];
         if (dbDeposit) {
           // Use database data
@@ -524,18 +531,18 @@ const Reports: React.FC = () => {
           transactionCode: parcel.transactionCode || '',
           createdAt: parcel.createdAt
         };
-        
+
         clerkData[clerkId].parcels.push(clerkParcelData);
         clerkData[clerkId].totalPaidAmount += parcel.totalAmount;
       });
-      
+
       // Calculate totals for each clerk
       Object.values(clerkData).forEach(clerk => {
         clerk.totalDeposited = clerk.parcels.reduce((sum, p) => sum + p.depositedAmount, 0);
         clerk.totalExpenses = clerk.parcels.reduce((sum, p) => sum + p.expenses, 0);
         clerk.remainingDebt = clerk.totalPaidAmount - clerk.totalDeposited + clerk.totalExpenses;
       });
-      
+
       return Object.values(clerkData);
     } catch (error) {
       console.error('Error fetching clerk cash-in data:', error);
@@ -548,11 +555,11 @@ const Reports: React.FC = () => {
     try {
       // Get all parcels
       const allParcels = await wmsApi.getParcels();
-      
+
       // Filter parcels by date range and paid status
       const paidParcels = allParcels.filter(parcel => {
         if (!parcel.paymentMethods?.toLowerCase().includes('paid')) return false;
-        
+
         if (parcel.createdAt) {
           try {
             const parcelDate = new Date(parcel.createdAt).toISOString().split('T')[0];
@@ -569,7 +576,7 @@ const Reports: React.FC = () => {
       try {
         // Get all deposits - we'll filter by parcel date, not deposit date
         const allDeposits = await wmsApi.getParcelDeposits();
-        
+
         // Don't filter deposits by date here - we'll match them to parcels by parcelId
         // and let the parcel date filtering handle the date range
         existingDeposits = allDeposits;
@@ -582,26 +589,26 @@ const Reports: React.FC = () => {
       existingDeposits.forEach(deposit => {
         depositsMap[deposit.parcelId] = deposit;
       });
-      
+
 
       // Get users to populate clerk information
       const users = await wmsApi.getUsers();
-      
+
       // Group transactions by clerk
       const clerkDebitMap: Record<number, ClerkDebitData> = {};
-      
+
       paidParcels.forEach(parcel => {
         const clerkId = parcel.createdById;
         if (!clerkId) return;
-        
+
         const clerk = users.find(u => u.id === clerkId);
         if (!clerk) return;
-        
+
         if (!clerkDebitMap[clerkId]) {
           clerkDebitMap[clerkId] = {
             clerkId: clerkId,
-            clerkName: clerk.firstName && clerk.lastName 
-              ? `${clerk.firstName} ${clerk.lastName}` 
+            clerkName: clerk.firstName && clerk.lastName
+              ? `${clerk.firstName} ${clerk.lastName}`
               : clerk.username,
             clerkUsername: clerk.username,
             totalPaidAmount: 0,
@@ -613,11 +620,11 @@ const Reports: React.FC = () => {
             transactions: []
           };
         }
-        
+
         // Check for deposit/expense data from database only
         let depositedAmount = 0;
         let expenses = 0;
-        
+
         const dbDeposit = depositsMap[parcel.id];
         if (dbDeposit) {
           depositedAmount = dbDeposit.depositedAmount;
@@ -641,14 +648,14 @@ const Reports: React.FC = () => {
           sender: parcel.sender,
           receiver: parcel.receiver
         };
-        
+
         clerkDebitMap[clerkId].transactions.push(transaction);
         clerkDebitMap[clerkId].totalPaidAmount += parcel.totalAmount;
         clerkDebitMap[clerkId].totalDeposited += depositedAmount;
         clerkDebitMap[clerkId].totalExpenses += expenses;
         clerkDebitMap[clerkId].parcelCount += 1;
       });
-      
+
       // Calculate current debit for each clerk (fixed to match .NET MAUI calculation)
       // Formula: remainingDebt = totalPaidAmount - (totalDeposited + totalExpenses)
       Object.values(clerkDebitMap).forEach(clerk => {
@@ -656,7 +663,7 @@ const Reports: React.FC = () => {
         // Sort transactions by date (most recent first)
         clerk.transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       });
-      
+
       // Sort clerks by highest debit first
       return Object.values(clerkDebitMap).sort((a, b) => b.currentDebit - a.currentDebit);
     } catch (error) {
@@ -669,7 +676,7 @@ const Reports: React.FC = () => {
   const fetchDailySalesData = useCallback(async (dateRange: { from: string; to: string }): Promise<UserDailySales[]> => {
     try {
       setLoadingDailySales(true);
-      
+
       // Get all parcels and users
       const [allParcels, allUsers] = await Promise.all([
         wmsApi.getParcels(),
@@ -712,7 +719,7 @@ const Reports: React.FC = () => {
 
           if (userSalesMap[userId] && parcelDate) {
             const existingDay = userSalesMap[userId].dailySales.find(day => day.date === parcelDate);
-            
+
             if (existingDay) {
               existingDay.totalSales += amount;
               existingDay.parcelCount += 1;
@@ -750,12 +757,12 @@ const Reports: React.FC = () => {
   // Generate cash-in data for clerks with paid parcels (fallback method)
   const generateClerkCashInData = useCallback((parcels: Parcel[], filterDate?: string): ClerkCashInData[] => {
     const clerkData: Record<number, ClerkCashInData> = {};
-    
+
     // Filter for paid parcels only and by date if specified
-    let paidParcels = parcels.filter(parcel => 
+    let paidParcels = parcels.filter(parcel =>
       parcel.paymentMethods?.toLowerCase().includes('paid')
     );
-    
+
     // Apply date filter for cash-in feature
     if (filterDate) {
       paidParcels = paidParcels.filter(parcel => {
@@ -770,18 +777,20 @@ const Reports: React.FC = () => {
         return false;
       });
     }
-    
+
     paidParcels.forEach(parcel => {
       const clerkId = parcel.createdById;
       if (!clerkId) return;
-      
+
       let clerkName = `User ${clerkId}`;
       let clerkUsername = `user_${clerkId}`;
-      
+
       // Try to get clerk name from createdBy object
       if (parcel.createdBy) {
         if (typeof parcel.createdBy === 'object') {
-          clerkName = parcel.createdBy.username || parcel.createdBy.firstName || `User ${clerkId}`;
+          clerkName = parcel.createdBy.firstName && parcel.createdBy.lastName
+            ? `${parcel.createdBy.firstName} ${parcel.createdBy.lastName}`
+            : parcel.createdBy.username || `User ${clerkId}`;
           clerkUsername = parcel.createdBy.username || `user_${clerkId}`;
         } else if (typeof parcel.createdBy === 'string') {
           clerkName = parcel.createdBy;
@@ -789,9 +798,11 @@ const Reports: React.FC = () => {
         }
       } else if (userCache.has(clerkId)) {
         clerkName = userCache.get(clerkId)!;
-        clerkUsername = clerkName;
+        // If we have the name in cache, we might not have the username easily available if it wasn't stored separately
+        // But usually userCache stores the display name which we want to use as clerkName
+        clerkUsername = `user_${clerkId}`; // Fallback
       }
-      
+
       if (!clerkData[clerkId]) {
         clerkData[clerkId] = {
           clerkId,
@@ -804,7 +815,7 @@ const Reports: React.FC = () => {
           parcels: []
         };
       }
-      
+
       const parcelData: ClerkParcelData = {
         id: parcel.id,
         waybillNumber: parcel.waybillNumber || '',
@@ -817,36 +828,38 @@ const Reports: React.FC = () => {
         transactionCode: parcel.transactionCode,
         createdAt: parcel.createdAt
       };
-      
+
       clerkData[clerkId].parcels.push(parcelData);
       clerkData[clerkId].totalPaidAmount += parcelData.amount;
     });
-    
+
     // Calculate totals for each clerk
     Object.values(clerkData).forEach(clerk => {
       clerk.totalDeposited = clerk.parcels.reduce((sum, p) => sum + p.depositedAmount, 0);
       clerk.totalExpenses = clerk.parcels.reduce((sum, p) => sum + p.expenses, 0);
       clerk.remainingDebt = clerk.totalPaidAmount - clerk.totalDeposited - clerk.totalExpenses;
     });
-    
+
     return Object.values(clerkData).sort((a, b) => b.totalPaidAmount - a.totalPaidAmount);
   }, [userCache]);
 
   // Generate sales per clerk data with proper user resolution
   const generateSalesPerClerkData = useCallback((parcels: Parcel[]): SalesPerClerkData[] => {
     const clerkData: Record<number, { parcels: number; sales: number; name: string; username: string }> = {};
-    
+
     parcels.forEach(parcel => {
       const clerkId = parcel.createdById;
       if (!clerkId) return;
-      
+
       let clerkName = `User ${clerkId}`;
       let clerkUsername = `user_${clerkId}`;
-      
+
       // Try to get clerk name from createdBy object
       if (parcel.createdBy) {
         if (typeof parcel.createdBy === 'object') {
-          clerkName = parcel.createdBy.username || parcel.createdBy.firstName || `User ${clerkId}`;
+          clerkName = parcel.createdBy.firstName && parcel.createdBy.lastName
+            ? `${parcel.createdBy.firstName} ${parcel.createdBy.lastName}`
+            : parcel.createdBy.username || `User ${clerkId}`;
           clerkUsername = parcel.createdBy.username || `user_${clerkId}`;
         } else if (typeof parcel.createdBy === 'string') {
           clerkName = parcel.createdBy;
@@ -855,13 +868,13 @@ const Reports: React.FC = () => {
       } else if (userCache.has(clerkId)) {
         // Use cached user name
         clerkName = userCache.get(clerkId)!;
-        clerkUsername = clerkName;
+        clerkUsername = `user_${clerkId}`; // Fallback
       }
-      
+
       if (!clerkData[clerkId]) {
-        clerkData[clerkId] = { 
-          parcels: 0, 
-          sales: 0, 
+        clerkData[clerkId] = {
+          parcels: 0,
+          sales: 0,
           name: clerkName,
           username: clerkUsername
         };
@@ -877,22 +890,22 @@ const Reports: React.FC = () => {
       totalParcels: data.parcels,
       totalSales: data.sales,
       averagePerParcel: data.parcels > 0 ? data.sales / data.parcels : 0,
-      performance: (data.sales >= 50000 ? 'excellent' : 
-                   data.sales >= 25000 ? 'good' : 
-                   data.sales >= 10000 ? 'average' : 'below-average') as 'excellent' | 'good' | 'average' | 'below-average'
+      performance: (data.sales >= 50000 ? 'excellent' :
+        data.sales >= 25000 ? 'good' :
+          data.sales >= 10000 ? 'average' : 'below-average') as 'excellent' | 'good' | 'average' | 'below-average'
     })).sort((a, b) => b.totalSales - a.totalSales); // Sort by highest sales first
   }, [userCache]);
 
   const generateDeliveryRateData = useCallback((parcels: Parcel[]): DeliveryRateData[] => {
     const destinationData: Record<string, { total: number; delivered: number; pending: number; inTransit: number }> = {};
-    
+
     parcels.forEach(parcel => {
       const dest = parcel.destination || 'Unknown';
       if (!destinationData[dest]) {
         destinationData[dest] = { total: 0, delivered: 0, pending: 0, inTransit: 0 };
       }
       destinationData[dest].total++;
-      
+
       if (parcel.status === 3) destinationData[dest].delivered++;
       else if (parcel.status === 0) destinationData[dest].pending++;
       else if (parcel.status === 2) destinationData[dest].inTransit++;
@@ -921,10 +934,10 @@ const Reports: React.FC = () => {
   const generateUndeliveredParcelData = useCallback((dispatches: Dispatch[], parcels: Parcel[]): UndeliveredParcelData[] => {
     return dispatches.map(dispatch => {
       const normalizedParcelIds = normalizeParcelIds(dispatch.parcelIds);
-      const dispatchParcels = parcels.filter(p => 
+      const dispatchParcels = parcels.filter(p =>
         normalizedParcelIds.includes(p.id) && p.status !== 3
       );
-      
+
       return {
         dispatchCode: dispatch.dispatchCode,
         destination: dispatch.destination,
@@ -938,9 +951,9 @@ const Reports: React.FC = () => {
     }).filter(d => d.undeliveredParcels > 0);
   }, [normalizeParcelIds]);
 
-  const generateBranchDebitData = useCallback((parcels: Parcel[]): {[key: string]: BranchDebitSummary} => {
-    const branchData: {[key: string]: BranchDebitSummary} = {};
-    
+  const generateBranchDebitData = useCallback((parcels: Parcel[]): { [key: string]: BranchDebitSummary } => {
+    const branchData: { [key: string]: BranchDebitSummary } = {};
+
     // Filter for COD parcels (all statuses)
     const codParcels = parcels.filter(parcel => {
       const paymentMethod = (parcel.paymentMethods || '').toLowerCase();
@@ -989,7 +1002,7 @@ const Reports: React.FC = () => {
     // Add Nairobi-Paids as a special branch for paid parcels
     if (paidParcels.length > 0) {
       const nairobiPaidsBranch = 'Nairobi-Paids';
-      
+
       if (!branchData[nairobiPaidsBranch]) {
         branchData[nairobiPaidsBranch] = {
           branch: nairobiPaidsBranch,
@@ -1026,31 +1039,31 @@ const Reports: React.FC = () => {
     // Calculate debt for each transaction (will be overridden by API data if available)
     Object.values(branchData).forEach(branchSummary => {
       branchSummary.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
+
       let runningDebt = 0;
       branchSummary.transactions.forEach(transaction => {
         runningDebt += transaction.codTotal - transaction.depositedAmount;
         transaction.debt = runningDebt;
         branchSummary.totalDebt = runningDebt;
       });
-      
+
       branchSummary.totalDebt = Math.max(0, runningDebt);
     });
 
     return branchData;
   }, []);
 
-  const loadAndMergeBranchDeposits = useCallback(async (generatedData: {[key: string]: BranchDebitSummary}) => {
+  const loadAndMergeBranchDeposits = useCallback(async (generatedData: { [key: string]: BranchDebitSummary }) => {
     try {
       setLoadingDeposits(true);
-      
+
       // Load existing deposit data from API
       const apiDeposits = await wmsApi.getBranchDeposits(
         undefined, // Get all branches
         filters.startDate || undefined,
         filters.endDate || undefined
       );
-      
+
       console.log('API deposits response:', apiDeposits);
       console.log('Sample API deposit structure:', apiDeposits[0]);
 
@@ -1059,17 +1072,17 @@ const Reports: React.FC = () => {
 
       if (apiDeposits && Array.isArray(apiDeposits)) {
         // Group API records by branch and aggregate them
-        const groupedApiData: {[key: string]: any} = {};
-        
+        const groupedApiData: { [key: string]: any } = {};
+
         apiDeposits.forEach((record: any) => {
           console.log('Processing deposit record:', record);
           if (!record || !record.branch) {
             console.warn('Invalid deposit record:', record);
             return;
           }
-          
+
           const branch = record.branch;
-          
+
           if (!groupedApiData[branch]) {
             groupedApiData[branch] = {
               branch: branch,
@@ -1078,7 +1091,7 @@ const Reports: React.FC = () => {
               transactions: []
             };
           }
-          
+
           // Add this record as a transaction
           const transaction = {
             id: record.id,
@@ -1092,11 +1105,11 @@ const Reports: React.FC = () => {
             createdById: record.createdById,
             createdByName: record.createdByName
           };
-          
+
           groupedApiData[branch].transactions.push(transaction);
           groupedApiData[branch].totalDeposited += transaction.depositedAmount;
         });
-        
+
         // After processing all transactions, calculate the correct total debt for each branch
         Object.keys(groupedApiData).forEach(branch => {
           const branchData = groupedApiData[branch];
@@ -1106,22 +1119,22 @@ const Reports: React.FC = () => {
           const latestTransaction = branchData.transactions[branchData.transactions.length - 1];
           branchData.totalDebt = latestTransaction ? latestTransaction.debt : 0;
         });
-        
+
         // Now merge the grouped API data with generated data
         Object.keys(groupedApiData).forEach(branch => {
           const branchApiData = groupedApiData[branch];
-          
+
           if (mergedData[branch]) {
             // Update existing branch with API deposit data
             mergedData[branch].totalDeposited = branchApiData.totalDeposited;
-            
+
             // Calculate total debt: COD total from generated data minus total deposited from API
             const codTotal = mergedData[branch].totalCodAmount || 0;
             const totalDeposited = branchApiData.totalDeposited || 0;
             mergedData[branch].totalDebt = codTotal - totalDeposited;
-            
+
             console.log(`Branch ${branch}: COD=${codTotal}, Deposited=${totalDeposited}, Debt=${mergedData[branch].totalDebt}`);
-            
+
             // Update transactions with deposit amounts and IDs
             branchApiData.transactions.forEach((apiTransaction: any) => {
               const localTransaction = mergedData[branch].transactions.find(
@@ -1162,22 +1175,22 @@ const Reports: React.FC = () => {
 
   const generateMonthlyTrendsData = useCallback((parcels: Parcel[]) => {
     const monthlyData: Record<string, { total: number; delivered: number; pending: number }> = {};
-    
+
     parcels.forEach(parcel => {
       const date = new Date(parcel.createdAt);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
+
       if (!monthlyData[monthKey]) {
         monthlyData[monthKey] = { total: 0, delivered: 0, pending: 0 };
       }
-      
+
       monthlyData[monthKey].total++;
       if (parcel.status === 3) monthlyData[monthKey].delivered++;
       else if (parcel.status === 0) monthlyData[monthKey].pending++;
     });
 
     const sortedMonths = Object.keys(monthlyData).sort();
-    
+
     return {
       categories: sortedMonths.map(month => {
         const [year, monthNum] = month.split('-');
@@ -1203,28 +1216,28 @@ const Reports: React.FC = () => {
 
   const fetchReportData = useCallback(async () => {
     if (loading) return; // Prevent concurrent calls
-    
+
     try {
       setLoading(true);
       setError('');
-      
+
       // Fetch base data with error handling
       let parcelsData: Parcel[] = [];
       let dispatchesData: Dispatch[] = [];
-      
+
       try {
         const results = await Promise.allSettled([
           wmsApi.getParcels(),
           wmsApi.getDispatches()
         ]);
-        
+
         parcelsData = results[0].status === 'fulfilled' ? results[0].value : [];
         dispatchesData = results[1].status === 'fulfilled' ? results[1].value : [];
-        
+
         if (results[0].status === 'rejected') {
           // Fallback to empty array if parcels fail to load
         }
-        
+
         if (results[1].status === 'rejected') {
           // Fallback to empty array if dispatches fail to load
         }
@@ -1233,38 +1246,38 @@ const Reports: React.FC = () => {
         parcelsData = [];
         dispatchesData = [];
       }
-      
+
       setParcels(parcelsData);
       setDispatches(dispatchesData);
-      
+
       // Filter data based on filters
       let filteredParcels = parcelsData;
-      
+
       if (filters.startDate) {
-        filteredParcels = filteredParcels.filter(p => 
+        filteredParcels = filteredParcels.filter(p =>
           p.createdAt && new Date(p.createdAt) >= new Date(filters.startDate)
         );
       }
-      
+
       if (filters.endDate) {
-        filteredParcels = filteredParcels.filter(p => 
+        filteredParcels = filteredParcels.filter(p =>
           p.createdAt && new Date(p.createdAt) <= new Date(filters.endDate)
         );
       }
-      
+
       if (filters.destination) {
         filteredParcels = filteredParcels.filter(p => p.destination === filters.destination);
       }
-      
+
       if (filters.clerk) {
-        filteredParcels = filteredParcels.filter(p => 
+        filteredParcels = filteredParcels.filter(p =>
           p.createdBy?.toLowerCase().includes(filters.clerk.toLowerCase())
         );
       }
-      
+
       // Generate report data based on current report type
       let data: any = {};
-      
+
       switch (currentReport) {
         case 'sales-per-clerk':
           data.salesPerClerk = generateSalesPerClerkData(filteredParcels);
@@ -1296,9 +1309,9 @@ const Reports: React.FC = () => {
         default:
           data.parcels = filteredParcels;
       }
-      
+
       setReportData(data);
-      
+
     } catch (err) {
       setError('Failed to fetch report data');
     } finally {
@@ -1316,72 +1329,73 @@ const Reports: React.FC = () => {
     try {
       setParcelListLoading(true);
       setError('');
-      
+
       // Build filters for API call
       const apiFilters: any = {};
-      
+
       if (parcelFilters.dateFrom) {
         apiFilters.dateFrom = parcelFilters.dateFrom;
       }
-      
+
       if (parcelFilters.dateTo) {
         apiFilters.dateTo = parcelFilters.dateTo;
       }
-      
+
       if (parcelFilters.destination) {
         apiFilters.destination = parcelFilters.destination;
       }
-      
+
       if (parcelFilters.status !== 'all') {
         apiFilters.status = parcelFilters.status;
       }
-      
+
       const parcelsData = await wmsApi.getParcels();
-      
+
       // Apply client-side filtering based on the filters
       let filtered = parcelsData;
-      
+
       if (parcelFilters.dateFrom) {
-        filtered = filtered.filter(p => 
+        filtered = filtered.filter(p =>
           new Date(p.createdAt) >= new Date(parcelFilters.dateFrom)
         );
       }
-      
+
       if (parcelFilters.dateTo) {
-        filtered = filtered.filter(p => 
+        filtered = filtered.filter(p =>
           new Date(p.createdAt) <= new Date(parcelFilters.dateTo)
         );
       }
-      
+
       if (parcelFilters.destination) {
         filtered = filtered.filter(p => p.destination === parcelFilters.destination);
       }
-      
+
       if (parcelFilters.status !== 'all') {
         filtered = filtered.filter(p => p.status === parseInt(parcelFilters.status));
       }
-      
+
       // Populate user information for parcels that don't have createdBy populated
       try {
         const users = await wmsApi.getUsers();
-        
+
         const updatedParcels = filtered.map(parcel => {
           if (!parcel.createdBy && parcel.createdById) {
             const creator = users.find(u => u.id === parcel.createdById);
             if (creator) {
-              return { 
-                ...parcel, 
-                createdBy: { 
-                  username: creator.firstName && creator.lastName 
-                    ? `${creator.firstName} ${creator.lastName}` 
-                    : creator.username 
-                } 
+              return {
+                ...parcel,
+                ...parcel,
+                createdBy: {
+                  username: creator.username,
+                  firstName: creator.firstName,
+                  lastName: creator.lastName
+                }
               };
             }
           }
           return parcel;
         });
-        
+
         setFilteredParcels(updatedParcels);
       } catch (userErr) {
         // If users API fails, still display parcels without user info
@@ -1401,27 +1415,27 @@ const Reports: React.FC = () => {
         wmsApi.getParcels(),
         wmsApi.getUsers()
       ]);
-      
+
       const parcelsData = results[0].status === 'fulfilled' ? results[0].value : [];
       const usersData = results[1].status === 'fulfilled' ? results[1].value : [];
-      
+
       // Extract unique destinations from successfully loaded parcels
       if (parcelsData.length > 0) {
         const destinationSet = new Set(parcelsData.map(p => p.destination).filter(Boolean));
         const uniqueDestinations = Array.from(destinationSet);
         setDestinations(uniqueDestinations.sort());
       }
-      
+
       // Extract clerks (users who have created parcels) from successfully loaded users
       if (usersData.length > 0 && parcelsData.length > 0) {
-        const clerkUsers = usersData.filter(u => 
-          u.role?.name === 'Clerk' || 
+        const clerkUsers = usersData.filter(u =>
+          u.role?.name === 'Clerk' ||
           u.roles?.includes('clerk') ||
           parcelsData.some(p => p.createdById === u.id)
         );
-        setClerks(clerkUsers.map(u => ({ 
-          id: u.id, 
-          username: u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.username 
+        setClerks(clerkUsers.map(u => ({
+          id: u.id,
+          username: u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.username
         })));
       }
     } catch (err) {
@@ -1439,10 +1453,10 @@ const Reports: React.FC = () => {
 
     try {
       const user = await wmsApi.getUserById(userId);
-      const displayName = user ? 
-        (user.username || user.firstName || `User ${userId}`) : 
+      const displayName = user ?
+        (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username || `User ${userId}`) :
         `User ${userId}`;
-      
+
       // Cache the result
       setUserCache(prev => new Map(prev.set(userId, displayName)));
       return displayName;
@@ -1484,7 +1498,7 @@ const Reports: React.FC = () => {
       // Refresh the deposit data after successful save
       // Add a small delay to ensure the database has been updated
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       console.log('Refreshing deposit data after update...');
       const generatedData = generateBranchDebitData(parcels);
       const mergedData = await loadAndMergeBranchDeposits(generatedData);
@@ -1523,30 +1537,30 @@ const Reports: React.FC = () => {
 
   const handleParcelUpdate = useCallback(async () => {
     if (!selectedClerkParcel || !selectedClerk) return;
-    
+
     const depositAmount = parseFloat(parcelDepositAmount) || 0;
     const expenses = parseFloat(parcelExpenses) || 0;
-    
+
     if (depositAmount < 0 || expenses < 0) {
       setError('Amounts cannot be negative');
       return;
     }
-    
+
     try {
       setUpdatingParcel(true);
-      
+
       // Try to update via ParcelDeposits API first
       try {
         console.log('Updating parcel deposit via API...');
-        
+
         await wmsApi.updateOrCreateParcelDeposit(selectedClerkParcel.id, {
           depositedAmount: depositAmount,
           expenses: expenses,
           updatedById: user?.id ? parseInt(user.id.toString()) : undefined
         });
-        
+
         // If API call succeeds, refresh data efficiently - only update affected clerk's data locally
-        
+
         // Update the local clerk cash-in data without full refresh
         const updatedClerkData = clerkCashInData.map(clerk => {
           if (clerk.clerkId === selectedClerk.clerkId) {
@@ -1560,12 +1574,12 @@ const Reports: React.FC = () => {
               }
               return parcel;
             });
-            
+
             // Recalculate totals for this clerk only
             const totalDeposited = updatedParcels.reduce((sum, p) => sum + p.depositedAmount, 0);
             const totalExpenses = updatedParcels.reduce((sum, p) => sum + p.expenses, 0);
             const remainingDebt = clerk.totalPaidAmount - (totalDeposited + totalExpenses);
-            
+
             return {
               ...clerk,
               parcels: updatedParcels,
@@ -1576,19 +1590,19 @@ const Reports: React.FC = () => {
           }
           return clerk;
         });
-        
+
         setClerkCashInData(updatedClerkData);
-        
+
         // Only refresh Clerk Debit Management data (lighter operation)
         const refreshedDebitData = await fetchClerkDebitData(debitDateRange);
         setClerkDebitData(refreshedDebitData);
-        
+
         // Update the selected clerk data
         const updatedSelectedClerk = updatedClerkData.find(c => c.clerkId === selectedClerk.clerkId);
         if (updatedSelectedClerk) {
           setSelectedClerk(updatedSelectedClerk);
         }
-        
+
         console.log('Successfully updated parcel deposit via API');
         alert('Parcel updated successfully and saved to database!');
         setShowParcelModal(false);
@@ -1602,7 +1616,7 @@ const Reports: React.FC = () => {
           message: apiError instanceof Error ? apiError.message : 'Unknown error',
           stack: apiError instanceof Error ? apiError.stack : undefined
         });
-        
+
         alert(`Failed to update parcel deposit: ${apiError instanceof Error ? apiError.message : 'Unknown error'}. Please check the console for details.`);
         return;
       }
@@ -1610,7 +1624,7 @@ const Reports: React.FC = () => {
       setSelectedClerkParcel(null);
       setParcelDepositAmount('');
       setParcelExpenses('');
-      
+
     } catch (err) {
       setError('Failed to update parcel information');
     } finally {
@@ -1796,7 +1810,7 @@ const Reports: React.FC = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       const dateRange = `${debitDateRange.from} to ${debitDateRange.to}`;
-      
+
       printWindow.document.write(`
         <html>
           <head>
@@ -2178,7 +2192,7 @@ const Reports: React.FC = () => {
       'average': 'warning',
       'below-average': 'error'
     } as const;
-    
+
     return (
       <Badge variant={variants[performance as keyof typeof variants] || 'gray'}>
         {performance.replace('-', ' ').toUpperCase()}
@@ -2375,36 +2389,33 @@ const Reports: React.FC = () => {
             <div className="flex space-x-1 mb-6 border-b border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => setSalesPerClerkTab('performance')}
-                className={`px-4 py-2 text-sm font-medium rounded-t-lg ${
-                  salesPerClerkTab === 'performance'
-                    ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
+                className={`px-4 py-2 text-sm font-medium rounded-t-lg ${salesPerClerkTab === 'performance'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                  }`}
               >
                 Performance Overview
               </button>
               <button
                 onClick={() => setSalesPerClerkTab('cash-in')}
-                className={`px-4 py-2 text-sm font-medium rounded-t-lg ${
-                  salesPerClerkTab === 'cash-in'
-                    ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
+                className={`px-4 py-2 text-sm font-medium rounded-t-lg ${salesPerClerkTab === 'cash-in'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                  }`}
               >
                 Cash-in Management
               </button>
               <button
                 onClick={() => setSalesPerClerkTab('daily-sales')}
-                className={`px-4 py-2 text-sm font-medium rounded-t-lg ${
-                  salesPerClerkTab === 'daily-sales'
-                    ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
+                className={`px-4 py-2 text-sm font-medium rounded-t-lg ${salesPerClerkTab === 'daily-sales'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                  }`}
               >
                 Daily Sales
               </button>
             </div>
-            
+
             {/* Cash-in Date Filter */}
             {salesPerClerkTab === 'cash-in' && (
               <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -2441,7 +2452,7 @@ const Reports: React.FC = () => {
                 </p>
               </div>
             )}
-            
+
             {salesPerClerkTab === 'performance' && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="bg-blue-50 dark:bg-blue-500/20 p-4 rounded-lg">
@@ -2632,10 +2643,9 @@ const Reports: React.FC = () => {
                         </span>
                       </Table.Cell>
                       <Table.Cell>
-                        <span className={`font-medium ${
-                          clerk.remainingDebt > 0 ? 'text-red-600' : 
+                        <span className={`font-medium ${clerk.remainingDebt > 0 ? 'text-red-600' :
                           clerk.remainingDebt < 0 ? 'text-green-600' : ''
-                        }`}>
+                          }`}>
                           {formatCurrency(Math.abs(clerk.remainingDebt))}
                           {clerk.remainingDebt < 0 ? ' (Credit)' : ''}
                         </span>
@@ -2712,11 +2722,10 @@ const Reports: React.FC = () => {
                         <button
                           key={user.userId}
                           onClick={() => setSelectedUser(user)}
-                          className={`w-full text-left p-3 rounded-lg border transition-all ${
-                            selectedUser?.userId === user.userId
-                              ? 'bg-blue-50 border-blue-500 text-blue-900 dark:bg-blue-500/20 dark:border-blue-400 dark:text-blue-300'
-                              : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
-                          }`}
+                          className={`w-full text-left p-3 rounded-lg border transition-all ${selectedUser?.userId === user.userId
+                            ? 'bg-blue-50 border-blue-500 text-blue-900 dark:bg-blue-500/20 dark:border-blue-400 dark:text-blue-300'
+                            : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
+                            }`}
                         >
                           <div className="font-medium text-sm">
                             {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username}
@@ -2744,8 +2753,8 @@ const Reports: React.FC = () => {
                         <div className="flex items-center justify-between mb-4">
                           <div>
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {selectedUser.firstName && selectedUser.lastName 
-                                ? `${selectedUser.firstName} ${selectedUser.lastName}` 
+                              {selectedUser.firstName && selectedUser.lastName
+                                ? `${selectedUser.firstName} ${selectedUser.lastName}`
                                 : selectedUser.username}
                             </h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -2753,7 +2762,7 @@ const Reports: React.FC = () => {
                             </p>
                           </div>
                         </div>
-                        
+
                         {/* Summary Stats */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="bg-blue-50 dark:bg-blue-500/20 p-4 rounded-lg">
@@ -2784,7 +2793,7 @@ const Reports: React.FC = () => {
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                           Daily Sales Calendar
                         </h3>
-                        
+
                         {selectedUser.dailySales.length === 0 ? (
                           <div className="text-center py-8">
                             <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -2985,7 +2994,7 @@ const Reports: React.FC = () => {
 
   const renderBranchDebit = () => {
     const branchSummaries = Object.values(branchDebitData);
-    
+
     if (branchSummaries.length === 0) {
       return (
         <Card>
@@ -3070,23 +3079,22 @@ const Reports: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Branch Details
             </h3>
-            
+
             {/* Tab Navigation */}
             <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
               <nav className="-mb-px flex space-x-8 overflow-x-auto">
                 {branchSummaries.map((branchSummary) => {
                   const isActive = activeBranchTab === branchSummary.branch;
                   const isNairobiPaids = branchSummary.branch === 'Nairobi-Paids';
-                  
+
                   return (
                     <button
                       key={branchSummary.branch}
                       onClick={() => setActiveBranchTab(branchSummary.branch)}
-                      className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                        isActive
-                          ? 'border-brand-500 text-brand-600 dark:text-brand-400'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                      }`}
+                      className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors ${isActive
+                        ? 'border-brand-500 text-brand-600 dark:text-brand-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         {isNairobiPaids ? (
@@ -3095,8 +3103,8 @@ const Reports: React.FC = () => {
                           <MapPin className="w-4 h-4" />
                         )}
                         <span>{branchSummary.branch}</span>
-                        <Badge 
-                          variant={branchSummary.totalDebt > 0 ? 'error' : 'success'} 
+                        <Badge
+                          variant={branchSummary.totalDebt > 0 ? 'error' : 'success'}
                           size="sm"
                         >
                           {formatCurrency(Math.abs(branchSummary.totalDebt))}
@@ -3228,7 +3236,7 @@ const Reports: React.FC = () => {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -3241,7 +3249,7 @@ const Reports: React.FC = () => {
                     {selectedBranchDebit.branch === 'Nairobi-Paids' ? 'Paid' : 'COD'} Total: {formatCurrency(selectedBranchDebit.codTotal)}
                   </label>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Deposit Amount
@@ -3256,7 +3264,7 @@ const Reports: React.FC = () => {
                     step="0.01"
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-end gap-3 pt-4">
                   <Button
                     variant="outline"
@@ -3432,7 +3440,7 @@ const Reports: React.FC = () => {
               </div>
             </div>
           </Card.Header>
-          
+
           <div className="overflow-x-auto">
             <Table>
               <Table.Header>
@@ -3481,9 +3489,8 @@ const Reports: React.FC = () => {
                     </Table.Cell>
                     <Table.Cell>
                       <div className="flex items-center gap-2">
-                        <span className={`font-bold ${
-                          clerk.currentDebit > 0 ? 'text-red-600' : 'text-green-600'
-                        }`}>
+                        <span className={`font-bold ${clerk.currentDebit > 0 ? 'text-red-600' : 'text-green-600'
+                          }`}>
                           {formatCurrency(Math.abs(clerk.currentDebit))}
                         </span>
                         {clerk.currentDebit < 0 && (
@@ -3625,9 +3632,8 @@ const Reports: React.FC = () => {
                             </span>
                           </Table.Cell>
                           <Table.Cell>
-                            <span className={`font-bold ${
-                              transaction.netDebit > 0 ? 'text-red-600' : 'text-green-600'
-                            }`}>
+                            <span className={`font-bold ${transaction.netDebit > 0 ? 'text-red-600' : 'text-green-600'
+                              }`}>
                               {formatCurrency(Math.abs(transaction.netDebit))}
                               {transaction.netDebit < 0 ? ' (Credit)' : ''}
                             </span>
@@ -3650,7 +3656,7 @@ const Reports: React.FC = () => {
                 >
                   Close
                 </Button>
-                <Button 
+                <Button
                   variant="primary"
                   onClick={() => downloadClerkDebitPDF(selectedDebitClerk)}
                 >
@@ -3672,12 +3678,12 @@ const Reports: React.FC = () => {
       }
       return parcel.createdBy;
     }
-    
+
     // Try to get from cache
     if (userCache.has(parcel.createdById)) {
       return userCache.get(parcel.createdById)!;
     }
-    
+
     // Fetch user data in background and return fallback for now
     getUserDisplayName(parcel.createdById);
     return `User ${parcel.createdById}`;
@@ -3782,7 +3788,7 @@ const Reports: React.FC = () => {
       render: (parcel: Parcel) => {
         const statusConfig = {
           0: { variant: 'warning', text: 'Pending' },
-          1: { variant: 'info', text: 'Finalized' },
+          1: { variant: 'info', text: 'Confirmed' },
           2: { variant: 'primary', text: 'In Transit' },
           3: { variant: 'success', text: 'Delivered' },
           4: { variant: 'error', text: 'Cancelled' }
@@ -3824,7 +3830,7 @@ const Reports: React.FC = () => {
     const getStatusText = (status: number) => {
       const statusMap = {
         0: 'Pending',
-        1: 'Finalized',
+        1: 'Confirmed',
         2: 'In Transit',
         3: 'Delivered',
         4: 'Cancelled'
@@ -3835,7 +3841,7 @@ const Reports: React.FC = () => {
     const getStatusBadge = (status: number) => {
       const statusConfig = {
         0: { variant: 'warning', text: 'Pending' },
-        1: { variant: 'info', text: 'Finalized' },
+        1: { variant: 'info', text: 'Confirmed' },
         2: { variant: 'primary', text: 'In Transit' },
         3: { variant: 'success', text: 'Delivered' },
         4: { variant: 'error', text: 'Cancelled' }
@@ -3866,7 +3872,7 @@ const Reports: React.FC = () => {
                 th { background-color: #f5f5f5; font-weight: bold; }
                 .status { padding: 2px 6px; border-radius: 3px; font-size: 10px; }
                 .status-pending { background: #fef3c7; color: #92400e; }
-                .status-finalized { background: #dbeafe; color: #1e40af; }
+                .status-confirmed { background: #dbeafe; color: #1e40af; }
                 .status-transit { background: #e0e7ff; color: #3730a3; }
                 .status-delivered { background: #d1fae5; color: #065f46; }
                 .status-cancelled { background: #fee2e2; color: #991b1b; }
@@ -3948,7 +3954,7 @@ const Reports: React.FC = () => {
         options: [
           { value: 'all', label: 'All Status' },
           { value: '0', label: 'Pending' },
-          { value: '1', label: 'Finalized' },
+          { value: '1', label: 'Confirmed' },
           { value: '2', label: 'In Transit' },
           { value: '3', label: 'Delivered' },
           { value: '4', label: 'Cancelled' }
@@ -4042,7 +4048,7 @@ const Reports: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             {showParcelFilters && (
               <FilterPanel
                 fields={parcelFilterFields}
@@ -4232,11 +4238,10 @@ const Reports: React.FC = () => {
                 <button
                   key={report.key}
                   onClick={() => setCurrentReport(report.key as ReportType)}
-                  className={`p-4 rounded-lg border-2 transition-all duration-200 ${
-                    currentReport === report.key
-                      ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400'
-                      : 'border-gray-200 hover:border-gray-300 text-gray-700 hover:text-gray-900 dark:border-gray-700 dark:hover:border-gray-600 dark:text-gray-300 dark:hover:text-gray-100'
-                  }`}
+                  className={`p-4 rounded-lg border-2 transition-all duration-200 ${currentReport === report.key
+                    ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-700 hover:text-gray-900 dark:border-gray-700 dark:hover:border-gray-600 dark:text-gray-300 dark:hover:text-gray-100'
+                    }`}
                 >
                   <IconComponent className="w-6 h-6 mx-auto mb-2" />
                   <div className="text-sm font-medium text-center">
@@ -4267,7 +4272,7 @@ const Reports: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             {/* Clerk Summary */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -4291,11 +4296,10 @@ const Reports: React.FC = () => {
                 </div>
                 <div className="bg-red-50 dark:bg-red-500/20 p-4 rounded-lg">
                   <div className="text-sm font-medium text-red-600 dark:text-red-400">Outstanding Debt</div>
-                  <div className={`text-xl font-bold ${
-                    selectedClerk.remainingDebt > 0 ? 'text-red-900 dark:text-red-300' : 
-                    selectedClerk.remainingDebt < 0 ? 'text-green-900 dark:text-green-300' : 
-                    'text-gray-900 dark:text-gray-300'
-                  }`}>
+                  <div className={`text-xl font-bold ${selectedClerk.remainingDebt > 0 ? 'text-red-900 dark:text-red-300' :
+                    selectedClerk.remainingDebt < 0 ? 'text-green-900 dark:text-green-300' :
+                      'text-gray-900 dark:text-gray-300'
+                    }`}>
                     {formatCurrency(Math.abs(selectedClerk.remainingDebt))}
                     {selectedClerk.remainingDebt < 0 ? ' (Credit)' : ''}
                   </div>
@@ -4345,9 +4349,8 @@ const Reports: React.FC = () => {
                         </span>
                       </Table.Cell>
                       <Table.Cell>
-                        <span className={`font-medium ${
-                          (parcel.amount - parcel.depositedAmount - parcel.expenses) > 0 ? 'text-red-600' : 'text-green-600'
-                        }`}>
+                        <span className={`font-medium ${(parcel.amount - parcel.depositedAmount - parcel.expenses) > 0 ? 'text-red-600' : 'text-green-600'
+                          }`}>
                           {formatCurrency(parcel.amount - parcel.depositedAmount - parcel.expenses)}
                         </span>
                       </Table.Cell>
@@ -4396,7 +4399,7 @@ const Reports: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                 <div className="text-sm text-gray-600 dark:text-gray-400">Parcel Details</div>
@@ -4444,8 +4447,8 @@ const Reports: React.FC = () => {
               <div className="bg-blue-50 dark:bg-blue-500/20 p-3 rounded-lg">
                 <div className="text-sm text-blue-600 dark:text-blue-400">
                   Remaining: {formatCurrency(
-                    selectedClerkParcel.amount - 
-                    (parseFloat(parcelDepositAmount) || 0) - 
+                    selectedClerkParcel.amount -
+                    (parseFloat(parcelDepositAmount) || 0) -
                     (parseFloat(parcelExpenses) || 0)
                   )}
                 </div>

@@ -441,8 +441,9 @@ const ViewDispatch: React.FC = () => {
               </head>
               <body>
                 <div class="header">
-                  <h1>NID LOGISTICS DISPATCH NOTE</h1>
+                  <h1>NID LOGISTICS LTD DISPATCH NOTE</h1>
                   <h2>DISPATCH MANAGEMENT SYSTEM</h2>
+                  <p style="margin: 5px 0; font-size: 10px;">Efficiency in Motion</p>
                 </div>
                 
                 <div class="info-grid">
@@ -576,6 +577,31 @@ const ViewDispatch: React.FC = () => {
                       '<strong>GRAND TOTAL: KES ' + (paymentTotals.COD + paymentTotals.Paid + paymentTotals.Contract).toFixed(2) + '</strong>' +
                     '</div>';
                   })()}
+                </div>
+                
+                <div style="margin-top: 30px; border-top: 2px solid #000; padding-top: 15px;">
+                  <h3 style="text-align: center; margin: 0 0 10px 0; font-size: 14px;">PAYMENT INFORMATION</h3>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 10px;">
+                    <div>
+                      <h4 style="margin: 0 0 5px 0; font-size: 11px;">M-PESA Payment Details:</h4>
+                      <div><strong>Paybill:</strong> 522533</div>
+                      <div><strong>Account Number:</strong> 1329713648</div>
+                      <div><strong>Till Number:</strong> 4214115 (Direct-pay only)</div>
+                      <div><strong>Account Name:</strong> NID LOGISTICS LTD</div>
+                    </div>
+                    <div>
+                      <h4 style="margin: 0 0 5px 0; font-size: 11px;">Payment Instructions:</h4>
+                      <div>• Use Paybill 522533 for payments</div>
+                      <div>• Include dispatch code as reference</div>
+                      <div>• COD payments collected on delivery</div>
+                      <div>• Contact office for payment queries</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px; font-size: 9px; color: #666;">
+                  <p style="margin: 0;">Thank you for choosing NID LOGISTICS LTD - Efficiency in Motion</p>
+                  <p style="margin: 5px 0 0 0;">Generated: ${new Date().toLocaleDateString('en-KE')} | Dispatch: ${dispatch.dispatchCode}</p>
                 </div>
               </body>
             </html>
@@ -775,7 +801,7 @@ const ViewDispatch: React.FC = () => {
       sortable: true,
       render: (parcel: EnhancedParcel) => (
         <Badge variant={parcel.status === 3 ? 'success' : parcel.status === 2 ? 'primary' : 'warning'}>
-          {parcel.status === 0 ? 'Pending' : parcel.status === 1 ? 'Finalized' : parcel.status === 2 ? 'In Transit' : parcel.status === 3 ? 'Delivered' : 'Cancelled'}
+          {parcel.status === 0 ? 'Pending' : parcel.status === 1 ? 'Confirmed' : parcel.status === 2 ? 'In Transit' : parcel.status === 3 ? 'Delivered' : 'Cancelled'}
         </Badge>
       )
     }

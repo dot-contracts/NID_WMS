@@ -27,7 +27,7 @@ const Parcels: React.FC = () => {
   const [showParcelModal, setShowParcelModal] = useState(false);
   const [destinations, setDestinations] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
-  
+
   const [filters, setFilters] = useState<ParcelFilterState>({
     search: '',
     status: '',
@@ -66,7 +66,7 @@ const Parcels: React.FC = () => {
   const getStatusLabel = (status: number) => {
     const statusMap = {
       0: 'Pending',
-      1: 'Finalized', 
+      1: 'Confirmed',
       2: 'In Transit',
       3: 'Delivered',
       4: 'Cancelled'
@@ -133,8 +133,8 @@ const Parcels: React.FC = () => {
         <div class="container">
           <!-- Header -->
           <div class="header">
-            <div class="company-name"> LOGISTICS</div>
-            <div class="company-tagline">Reliable Delivery Solutions</div>
+            <div class="company-name">NID LOGISTICS LTD</div>
+            <div class="company-tagline">Efficiency in Motion</div>
             <div class="document-title">OFFICIAL CONSIGNMENT NOTE</div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
               <div>
@@ -354,8 +354,8 @@ const Parcels: React.FC = () => {
       <body>
         <div class="receipt">
           <!-- Header -->
-          <div class="center bold large">NID LOGISTICS</div>
-          <div class="center small">Reliable Delivery Solutions</div>
+          <div class="center bold large">NID LOGISTICS LTD</div>
+          <div class="center small">Efficiency in Motion</div>
           <div class="divider"></div>
           
           <div class="center bold medium">CONSIGNMENT NOTE</div>
@@ -446,20 +446,20 @@ const Parcels: React.FC = () => {
 
     try {
       setIsExporting(true);
-      
+
       const filterSummary = generateFilterSummary(filters);
       const exportDate = new Date().toISOString().split('T')[0];
-      
+
       // Add a small delay to show loading state for large datasets
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       exportParcelsToPDF(filteredParcels, {
         title: 'Parcels Export Report',
         filename: `parcels-export-${exportDate}.pdf`,
         includeFilters: true,
         filterSummary: filterSummary
       });
-      
+
     } catch (error) {
       console.error('Error exporting PDF:', error);
       alert('Failed to export PDF. Please try again.');
@@ -472,41 +472,41 @@ const Parcels: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       // Determine if we should filter by branch
       const branchName = isBranchManager() && user?.branch?.name ? user.branch.name : undefined;
-      
+
       const data = await wmsApi.getParcels(branchName);
-      
+
       // Populate user information for parcels that don't have createdBy populated
       try {
         const users = await wmsApi.getUsers();
-        
+
         const updatedParcels = data.map(parcel => {
           if (!parcel.createdBy && parcel.createdById) {
             const creator = users.find(u => u.id === parcel.createdById);
             if (creator) {
-              return { 
-                ...parcel, 
-                createdBy: { 
-                  username: creator.firstName && creator.lastName 
-                    ? `${creator.firstName} ${creator.lastName}` 
-                    : creator.username 
-                } 
+              return {
+                ...parcel,
+                createdBy: {
+                  username: creator.firstName && creator.lastName
+                    ? `${creator.firstName} ${creator.lastName}`
+                    : creator.username
+                }
               };
             }
           }
           return parcel;
         });
-        
+
         setParcels(updatedParcels);
-        
+
         // Extract unique destinations for filter dropdown
         const destinationSet = new Set(updatedParcels.map(p => p.destination).filter(Boolean));
         setDestinations(Array.from(destinationSet).sort());
       } catch (userErr) {
         setParcels(data);
-        
+
         // Extract unique destinations even if user mapping fails
         const destinationSet = new Set(data.map(p => p.destination).filter(Boolean));
         setDestinations(Array.from(destinationSet).sort());
@@ -521,12 +521,12 @@ const Parcels: React.FC = () => {
   const getStatusBadge = (status: number) => {
     const statusMap = {
       0: { label: 'Pending', variant: 'warning' as const },
-      1: { label: 'Finalized', variant: 'primary' as const },
+      1: { label: 'Confirmed', variant: 'primary' as const },
       2: { label: 'In Transit', variant: 'primary' as const },
       3: { label: 'Delivered', variant: 'success' as const },
       4: { label: 'Cancelled', variant: 'error' as const },
     };
-    
+
     const statusInfo = statusMap[status as keyof typeof statusMap] || { label: 'Unknown', variant: 'gray' as const };
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
   };
@@ -563,7 +563,7 @@ const Parcels: React.FC = () => {
     if (filters.status) {
       const statusOptions = [
         { value: '0', label: 'Pending' },
-        { value: '1', label: 'Finalized' },
+        { value: '1', label: 'Confirmed' },
         { value: '2', label: 'In Transit' },
         { value: '3', label: 'Delivered' },
         { value: '4', label: 'Cancelled' }
@@ -653,7 +653,7 @@ const Parcels: React.FC = () => {
       options: [
         { value: '', label: 'All Statuses' },
         { value: '0', label: 'Pending' },
-        { value: '1', label: 'Finalized' },
+        { value: '1', label: 'Confirmed' },
         { value: '2', label: 'In Transit' },
         { value: '3', label: 'Delivered' },
         { value: '4', label: 'Cancelled' }
@@ -709,47 +709,47 @@ const Parcels: React.FC = () => {
 
   const filteredParcels = parcels.filter(parcel => {
     // Search filter
-    const matchesSearch = !filters.search || 
+    const matchesSearch = !filters.search ||
       parcel.waybillNumber.toLowerCase().includes(filters.search.toLowerCase()) ||
       parcel.destination.toLowerCase().includes(filters.search.toLowerCase()) ||
       parcel.sender.toLowerCase().includes(filters.search.toLowerCase()) ||
       parcel.receiver.toLowerCase().includes(filters.search.toLowerCase());
-    
+
     // Status filter
     const matchesStatus = !filters.status || parcel.status.toString() === filters.status;
-    
+
     // Destination filter
-    const matchesDestination = !filters.destination || 
+    const matchesDestination = !filters.destination ||
       parcel.destination.toLowerCase().includes(filters.destination.toLowerCase());
-    
+
     // Payment method filter
-    const matchesPaymentMethod = !filters.paymentMethod || 
+    const matchesPaymentMethod = !filters.paymentMethod ||
       parcel.paymentMethods.toLowerCase().includes(filters.paymentMethod.toLowerCase());
-    
+
     // Amount range filter
     const matchesAmountRange = (!filters.amountRange.from && !filters.amountRange.to) ||
       ((filters.amountRange.from ? parcel.totalAmount >= Number(filters.amountRange.from) : true) &&
-       (filters.amountRange.to ? parcel.totalAmount <= Number(filters.amountRange.to) : true));
-    
+        (filters.amountRange.to ? parcel.totalAmount <= Number(filters.amountRange.to) : true));
+
     // Date range filter
     const matchesDateRange = (!filters.dateRange.from && !filters.dateRange.to) ||
       ((filters.dateRange.from ? new Date(parcel.createdAt) >= new Date(filters.dateRange.from) : true) &&
-       (filters.dateRange.to ? (() => {
-         const endDate = new Date(filters.dateRange.to);
-         endDate.setHours(23, 59, 59, 999); // Set to end of day
-         return new Date(parcel.createdAt) <= endDate;
-       })() : true));
-    
+        (filters.dateRange.to ? (() => {
+          const endDate = new Date(filters.dateRange.to);
+          endDate.setHours(23, 59, 59, 999); // Set to end of day
+          return new Date(parcel.createdAt) <= endDate;
+        })() : true));
+
     // Sender filter
-    const matchesSender = !filters.sender || 
+    const matchesSender = !filters.sender ||
       parcel.sender.toLowerCase().includes(filters.sender.toLowerCase());
-    
+
     // Receiver filter
-    const matchesReceiver = !filters.receiver || 
+    const matchesReceiver = !filters.receiver ||
       parcel.receiver.toLowerCase().includes(filters.receiver.toLowerCase());
-    
-    return matchesSearch && matchesStatus && matchesDestination && matchesPaymentMethod && 
-           matchesAmountRange && matchesDateRange && matchesSender && matchesReceiver;
+
+    return matchesSearch && matchesStatus && matchesDestination && matchesPaymentMethod &&
+      matchesAmountRange && matchesDateRange && matchesSender && matchesReceiver;
   });
 
   // Virtual table columns
@@ -864,17 +864,17 @@ const Parcels: React.FC = () => {
       width: 100,
       render: (parcel: Parcel) => (
         <div className="flex items-center space-x-1">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             title="View Details"
             onClick={() => handleViewParcel(parcel)}
           >
             <Eye className="w-4 h-4" />
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             title="Download A4 Receipt"
             onClick={() => handleDownloadA4Receipt(parcel)}
           >
@@ -955,9 +955,9 @@ const Parcels: React.FC = () => {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Parcels ({filteredParcels.length})
             </h2>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleExportPDF}
               disabled={isExporting || filteredParcels.length === 0}
             >
@@ -975,7 +975,7 @@ const Parcels: React.FC = () => {
             </Button>
           </div>
         </Card.Header>
-        
+
         <VirtualScrollTable
           data={filteredParcels}
           columns={columns}
@@ -983,10 +983,10 @@ const Parcels: React.FC = () => {
           containerHeight={600}
           loading={loading}
           emptyMessage={
-            Object.values(filters).some(filter => 
-              typeof filter === 'string' ? filter : 
-              typeof filter === 'object' && filter !== null ? 
-                Object.values(filter).some(v => v) : false
+            Object.values(filters).some(filter =>
+              typeof filter === 'string' ? filter :
+                typeof filter === 'object' && filter !== null ?
+                  Object.values(filter).some(v => v) : false
             ) ? 'Try adjusting your filters' : 'No parcels have been created yet'
           }
           onRowClick={(parcel) => {

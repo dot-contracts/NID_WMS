@@ -24,6 +24,9 @@ namespace wms_android.shared.DTOs
         
         [Required]
         public int CreatedById { get; set; }
+        
+        [Required]
+        public List<string> ParcelIds { get; set; } = new List<string>();
     }
     
     public class UpdateInvoiceDto

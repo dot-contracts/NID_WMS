@@ -22,7 +22,7 @@ namespace wms_android.shared.Services
         public ParcelService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5053";  // Changed fallback from production to localhost
+            _baseUrl = configuration["ApiSettings:BaseUrl"] ?? "https://plankton-app-d86df.ondigitalocean.app/";
             
             // Configure HttpClient
             _httpClient.BaseAddress = new Uri(_baseUrl);
@@ -1257,8 +1257,8 @@ namespace wms_android.shared.Services
                 }
                 else
                 {
-                    // Default to pending and finalized for dispatch
-                    filtered = filtered.Where(p => p.Status == ParcelStatus.Pending || p.Status == ParcelStatus.Finalized);
+                    // Default to pending and confirmed for dispatch
+                    filtered = filtered.Where(p => p.Status == ParcelStatus.Pending || p.Status == ParcelStatus.Confirmed);
                 }
 
                 if (fromDate.HasValue)

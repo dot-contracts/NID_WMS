@@ -71,7 +71,9 @@ namespace wms_android
             // Create HttpClient for API access
             builder.Services.AddTransient<HttpClient>(sp => {
                 var client = new HttpClient();
-                var baseUrl = configuration["ApiSettings:BaseUrl"] ?? "https://plankton-app-d86df.ondigitalocean.app/";
+                // Hardcoded for debugging/production fix
+                var baseUrl = "https://plankton-app-d86df.ondigitalocean.app/";
+                // var baseUrl = configuration["ApiSettings:BaseUrl"] ?? "https://plankton-app-d86df.ondigitalocean.app/";
                 
                 // Ensure baseUrl doesn't include "/api"
                 if (baseUrl.EndsWith("/api/")) {

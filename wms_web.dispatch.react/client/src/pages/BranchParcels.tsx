@@ -147,7 +147,7 @@ const BranchParcels: React.FC = () => {
   const getStatusLabel = (status: number) => {
     const statusMap = {
       0: 'Pending',
-      1: 'Finalized', 
+      1: 'Confirmed', 
       2: 'In Transit',
       3: 'Delivered',
       4: 'Cancelled'
@@ -158,7 +158,7 @@ const BranchParcels: React.FC = () => {
   const getStatusBadge = (status: number) => {
     const statusMap = {
       0: { label: 'Pending', variant: 'warning' as const },
-      1: { label: 'Finalized', variant: 'primary' as const },
+      1: { label: 'Confirmed', variant: 'primary' as const },
       2: { label: 'In Transit', variant: 'primary' as const },
       3: { label: 'Delivered', variant: 'success' as const },
       4: { label: 'Cancelled', variant: 'error' as const },
@@ -283,7 +283,7 @@ const BranchParcels: React.FC = () => {
       options: [
         { value: '', label: 'All Statuses' },
         { value: '0', label: 'Pending' },
-        { value: '1', label: 'Finalized' },
+        { value: '1', label: 'Confirmed' },
         { value: '2', label: 'In Transit' },
         { value: '3', label: 'Delivered' },
         { value: '4', label: 'Cancelled' }

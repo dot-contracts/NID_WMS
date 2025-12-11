@@ -274,7 +274,7 @@ namespace wms_android.ViewModels
             try
             {
                 // Use optimized API call to get unique destinations from ALL branches with pending status
-                // Dispatch needs to see all destinations where there are pending or finalized parcels
+                // Dispatch needs to see all destinations where there are pending or confirmed parcels
                 // Note: Currently API supports single status, we get pending ones (most common case)
                 var destinations = await _parcelService.GetUniqueDestinationsAsync(ParcelStatus.Pending);
                 
@@ -376,7 +376,7 @@ namespace wms_android.ViewModels
                 // Load all parcels for dispatch (no pagination needed for 2-day range)
                 var parcels = await _parcelService.GetParcelsForDispatchAsync(
                     destination: SelectedDestination,
-                    statuses: new List<ParcelStatus> { ParcelStatus.Pending, ParcelStatus.Finalized },
+                    statuses: new List<ParcelStatus> { ParcelStatus.Pending, ParcelStatus.Confirmed },
                     fromDate: FromDate,
                     toDate: ToDate,
                     createdByUsername: SelectedClerk != "All" ? SelectedClerk : null
@@ -432,7 +432,7 @@ namespace wms_android.ViewModels
             try
             {
                 // Use optimized API call to get unique clerks from ALL branches
-                // This allows filtering by any clerk who created parcels for this destination (pending/finalized)
+                // This allows filtering by any clerk who created parcels for this destination (pending/confirmed)
                 var clerkNames = await _parcelService.GetUniqueClerksByDestinationAsync(SelectedDestination, ParcelStatus.Pending);
                 
                 ClerkOptions.Clear();

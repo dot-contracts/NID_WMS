@@ -37,7 +37,7 @@ namespace wms_android.Converters
             {
                 ParcelStatus.Delivered => PrimaryColor,       // Delivered uses our primary green
                 ParcelStatus.Pending => WarningColor,         // Pending uses orange warning color
-                ParcelStatus.Finalized => PrimaryDarkColor,   // Finalized uses dark forest green
+                ParcelStatus.Confirmed => PrimaryDarkColor,   // Confirmed uses dark forest green
                 ParcelStatus.InTransit => PrimaryLightColor,  // In transit uses lighter green
                 ParcelStatus.Cancelled => ErrorColor,         // Cancelled uses error red
                 _ => Colors.Gray

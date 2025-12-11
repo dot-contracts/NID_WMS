@@ -29,7 +29,7 @@ export interface Parcel {
   paymentMethods: string;
   totalAmount: number;
   totalRate: number;
-  status: number; // 0=Pending, 1=Finalized, 2=InTransit, 3=Delivered, 4=Cancelled
+  status: number; // 0=Pending, 1=Confirmed, 2=InTransit, 3=Delivered, 4=Cancelled
   createdBy?: any;
   // Payment tracking fields
   amountPaid?: number;
@@ -153,11 +153,10 @@ export interface Invoice {
   id: number;
   invoiceNumber: string;
   contractCustomerId: number;
+  customerId: number;
   customer?: ContractCustomer;
-  billingPeriod: {
-    start: string;
-    end: string;
-  };
+  billingPeriodStart: string;
+  billingPeriodEnd: string;
   issueDate: string;
   dueDate: string;
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
@@ -166,9 +165,8 @@ export interface Invoice {
   totalAmount: number;
   paidAmount: number;
   notes?: string;
-  createdBy?: number;
-  apiUserId?: number;
-  apiUsername?: string;
+  createdById: number;
+  createdBy?: User;
   createdAt: string;
   updatedAt: string;
   items?: InvoiceItem[];
@@ -206,14 +204,13 @@ export interface InvoicePayment {
 
 export interface CreateInvoiceDto {
   contractCustomerId: number;
-  billingPeriod: {
-    start: string;
-    end: string;
-  };
-  parcelIds: string[];
+  issueDate: string;
+  dueDate: string;
+  billingPeriodStart: string;
+  billingPeriodEnd: string;
   notes?: string;
-  issueDate?: string;
-  dueDate?: string;
+  createdById: number;
+  parcelIds: string[];
 }
 
 export interface CreateInvoicePaymentDto {
@@ -297,6 +294,8 @@ export interface CreateDailyExpenseDto {
   amount: number;
   branchId?: number;
   clerkId?: number;
+  branchName?: string;
+  clerkName?: string;
   receiptNumber?: string;
   vendor?: string;
   notes?: string;
@@ -534,7 +533,7 @@ class WMSApiService {
       // Get all parcels first
       const allParcels = await this.getParcels();
       
-      // Filter by status: Only Pending (0) or Finalized (1)
+      // Filter by status: Only Pending (0) or Confirmed (1)
       const validStatuses = [0, 1];
       let filteredParcels = allParcels.filter(parcel => validStatuses.includes(parcel.status));
       
@@ -1192,7 +1191,13 @@ class WMSApiService {
       }
 
       const data = await response.json();
-      return data.$values || data;
+      const invoices = data.$values || data;
+      
+      // Transform nested items structure
+      return invoices.map((invoice: any) => ({
+        ...invoice,
+        items: invoice.items?.$values || invoice.items || []
+      }));
     } catch (error) {
       console.error('Error fetching invoices:', error);
       throw error;
@@ -1212,7 +1217,13 @@ class WMSApiService {
         throw new Error(`Failed to fetch invoice: ${response.status}`);
       }
 
-      return await response.json();
+      const invoice = await response.json();
+      
+      // Transform nested items structure
+      return {
+        ...invoice,
+        items: invoice.items?.$values || invoice.items || []
+      };
     } catch (error) {
       throw error;
     }
@@ -1234,7 +1245,13 @@ class WMSApiService {
         throw new Error(`Failed to create invoice: ${response.status}`);
       }
 
-      return await response.json();
+      const invoice = await response.json();
+      
+      // Transform nested items structure
+      return {
+        ...invoice,
+        items: invoice.items?.$values || invoice.items || []
+      };
     } catch (error) {
       throw error;
     }
@@ -1257,6 +1274,38 @@ class WMSApiService {
       }
 
       return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async recordInvoicePayment(invoiceId: number, paymentData: {
+    amount: number;
+    paymentMethod: 'cash' | 'cheque' | 'bank_transfer' | 'mobile_money';
+    paymentDate: string;
+    paymentReference?: string;
+    notes?: string;
+  }): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/Invoices/${invoiceId}/payment`, {
+        method: 'POST',
+        headers: {
+          ...this.getHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: paymentData.amount,
+          paymentDate: paymentData.paymentDate,
+          paymentMethod: paymentData.paymentMethod,
+          paymentReference: paymentData.paymentReference,
+          notes: paymentData.notes
+        }),
+        signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to record payment: ${response.status}`);
+      }
     } catch (error) {
       throw error;
     }
@@ -1384,6 +1433,8 @@ class WMSApiService {
 
   async createDailyExpense(expenseData: CreateDailyExpenseDto): Promise<DailyExpense> {
     try {
+      console.log('API: Creating expense with data:', expenseData);
+      
       const response = await fetch(`${API_BASE_URL}/Expenses`, {
         method: 'POST',
         headers: {
@@ -1395,11 +1446,14 @@ class WMSApiService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create daily expense: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`Failed to create daily expense: ${response.status} - ${errorText}`);
       }
 
       return await response.json();
     } catch (error) {
+      console.error('API Error:', error);
       throw error;
     }
   }

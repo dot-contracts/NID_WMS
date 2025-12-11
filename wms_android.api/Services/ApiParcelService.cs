@@ -235,7 +235,7 @@ namespace wms_android.api.Services
                 System.Diagnostics.Debug.WriteLine($"Found parcel: {JsonSerializer.Serialize(parcel)}");
 
                 // Update the status
-                parcel.Status = ParcelStatus.Finalized;
+                parcel.Status = ParcelStatus.Confirmed;
 
                 System.Diagnostics.Debug.WriteLine("Saving changes to database...");
                 var result = await _context.SaveChangesAsync();
@@ -245,13 +245,13 @@ namespace wms_android.api.Services
                 var updatedParcel = await _context.Parcels
                     .FirstOrDefaultAsync(p => p.Id == parcelId);
 
-                if (updatedParcel?.Status != ParcelStatus.Finalized)
+                if (updatedParcel?.Status != ParcelStatus.Confirmed)
                 {
                     System.Diagnostics.Debug.WriteLine($"Failed to verify parcel finalization. Current status: {updatedParcel?.Status}");
                     throw new Exception($"Failed to finalize parcel with ID {parcelId}");
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Successfully finalized parcel: {JsonSerializer.Serialize(updatedParcel)}");
+                System.Diagnostics.Debug.WriteLine($"Successfully confirmed parcel: {JsonSerializer.Serialize(updatedParcel)}");
             }
             catch (Exception ex)
             {
@@ -651,7 +651,7 @@ namespace wms_android.api.Services
         public async Task<IEnumerable<Parcel>> GetParcelsReadyForDispatchAsync()
         {
             return await _context.Parcels
-                .Where(p => p.Status == ParcelStatus.Pending || p.Status == ParcelStatus.Finalized)
+                .Where(p => p.Status == ParcelStatus.Pending || p.Status == ParcelStatus.Confirmed)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
@@ -676,8 +676,8 @@ namespace wms_android.api.Services
             }
             else
             {
-                // Default to pending and finalized for dispatch
-                query = query.Where(p => p.Status == ParcelStatus.Pending || p.Status == ParcelStatus.Finalized);
+                // Default to pending and confirmed for dispatch
+                query = query.Where(p => p.Status == ParcelStatus.Pending || p.Status == ParcelStatus.Confirmed);
             }
 
             if (fromDate.HasValue)

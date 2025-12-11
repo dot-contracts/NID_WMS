@@ -16,7 +16,7 @@ namespace wms_android.shared.Models
         public DateTime CreatedAt { get; set; }
         public string WaybillNumber { get; set; }
         public string QRCode { get; set; }
-        public bool IsFinalized { get; set; }
+        public bool IsConfirmed { get; set; }
         public DateTime? DispatchedAt { get; set; }
         public Parcel Parcel { get; set; }
         public int Quantity { get; set; }

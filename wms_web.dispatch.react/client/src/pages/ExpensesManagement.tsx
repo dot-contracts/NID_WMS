@@ -61,6 +61,19 @@ const ExpensesManagement: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<DailyExpense | null>(null);
+  const [newExpense, setNewExpense] = useState<CreateDailyExpenseDto>({
+    date: new Date().toISOString().split('T')[0],
+    category: 'other',
+    description: '',
+    amount: 0,
+    vendor: '',
+    receiptNumber: '',
+    branchId: undefined,
+    clerkId: undefined
+  });
+  const [expenseType, setExpenseType] = useState<'clerk' | 'operational'>('operational');
+  const [branches, setBranches] = useState<{id: number, name: string}[]>([]);
+  const [users, setUsers] = useState<{id: number, username: string, firstName?: string, lastName?: string, branchId?: number}[]>([]);
 
   const expenseCategories = [
     { value: 'fuel', label: 'Fuel', icon: Fuel },
@@ -75,7 +88,23 @@ const ExpensesManagement: React.FC = () => {
 
   useEffect(() => {
     loadExpenseData();
+    loadBranchesAndUsers();
   }, []);
+
+  const loadBranchesAndUsers = async () => {
+    try {
+      const [branchData, userData] = await Promise.all([
+        wmsApi.getBranches(),
+        wmsApi.getUsers()
+      ]);
+      console.log('Loaded branches:', branchData);
+      console.log('Loaded users:', userData);
+      setBranches(branchData);
+      setUsers(userData);
+    } catch (err) {
+      console.error('Failed to load branches/users:', err);
+    }
+  };
 
   const loadExpenseData = async () => {
     try {
@@ -320,6 +349,98 @@ const ExpensesManagement: React.FC = () => {
     }
   };
 
+  const handleCreateExpense = async () => {
+    try {
+      if (!newExpense.description || newExpense.amount <= 0) {
+        setError('Please fill in all required fields');
+        return;
+      }
+
+      // Prepare expense data based on expense type
+      let expenseData: CreateDailyExpenseDto;
+
+      if (expenseType === 'clerk') {
+        if (!newExpense.branchId) {
+          setError('Please select a branch for this clerk expense');
+          return;
+        }
+
+        if (!newExpense.clerkId) {
+          setError('Please select a clerk for this expense');
+          return;
+        }
+
+        // Get the selected branch and clerk names
+        const selectedBranch = branches.find(b => b.id === newExpense.branchId);
+        const selectedClerk = users.find(u => u.id === newExpense.clerkId);
+
+        if (!selectedBranch || !selectedClerk) {
+          setError('Selected branch or clerk not found');
+          return;
+        }
+
+        expenseData = {
+          ...newExpense,
+          branchName: selectedBranch.name,
+          clerkName: selectedClerk.firstName && selectedClerk.lastName 
+            ? `${selectedClerk.firstName} ${selectedClerk.lastName}`
+            : selectedClerk.username
+        };
+      } else {
+        // Operational expense - no clerk required
+        let selectedBranch = null;
+        if (newExpense.branchId) {
+          selectedBranch = branches.find(b => b.id === newExpense.branchId);
+          if (!selectedBranch) {
+            setError('Selected branch not found');
+            return;
+          }
+        }
+
+        expenseData = {
+          ...newExpense,
+          branchName: selectedBranch?.name || 'General Operations',
+          clerkName: 'N/A - Operational Expense',
+          clerkId: undefined // Clear clerk ID for operational expenses
+        };
+      }
+
+      console.log('Sending expense data:', expenseData);
+      console.log('JSON payload:', JSON.stringify(expenseData, null, 2));
+
+      await wmsApi.createDailyExpense(expenseData);
+      await loadExpenseData();
+      setShowCreateModal(false);
+      setNewExpense({
+        date: new Date().toISOString().split('T')[0],
+        category: 'other',
+        description: '',
+        amount: 0,
+        vendor: '',
+        receiptNumber: '',
+        branchId: undefined,
+        clerkId: undefined
+      });
+      setExpenseType('operational');
+    } catch (err) {
+      console.error('Error creating expense:', err);
+      console.error('Error details:', JSON.stringify(err, null, 2));
+      setError(err instanceof Error ? err.message : 'Failed to create expense');
+    }
+  };
+
+  const resetCreateModal = () => {
+    setShowCreateModal(false);
+    setNewExpense({
+      date: new Date().toISOString().split('T')[0],
+      category: 'other',
+      description: '',
+      amount: 0,
+      vendor: '',
+      receiptNumber: ''
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -474,6 +595,221 @@ const ExpensesManagement: React.FC = () => {
           className="border-0"
         />
       </Card>
+
+      {/* Create Expense Modal */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={resetCreateModal}
+        title="Add New Expense"
+        size="lg"
+      >
+        <div className="space-y-6">
+          {/* Expense Type Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Expense Type *
+            </label>
+            <Select
+              value={expenseType}
+              onChange={(value) => {
+                const newType = (value as unknown) as 'clerk' | 'operational';
+                setExpenseType(newType);
+                // Reset clerk/branch when switching types
+                if (newType === 'operational') {
+                  setNewExpense(prev => ({ ...prev, clerkId: undefined }));
+                }
+              }}
+              options={[
+                { value: 'operational', label: 'Operational Expense (Office rent, utilities, general supplies)' },
+                { value: 'clerk', label: 'Clerk-Specific Expense (Fuel, transport, clerk supplies)' }
+              ]}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Date *
+              </label>
+              <Input
+                type="date"
+                value={newExpense.date}
+                onChange={(e) => setNewExpense(prev => ({ ...prev, date: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category *
+              </label>
+              <Select
+                value={newExpense.category}
+                onChange={(value) => setNewExpense(prev => ({ ...prev, category: value as any }))}
+                options={expenseCategories.map(cat => ({
+                  value: cat.value,
+                  label: cat.label
+                }))}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Branch and Clerk Selection - Conditional based on expense type */}
+          {expenseType === 'clerk' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Branch *
+                </label>
+                <Select
+                  value={newExpense.branchId?.toString() || ''}
+                  onChange={(value) => setNewExpense(prev => ({ 
+                    ...prev, 
+                    branchId: (value as unknown) as string ? parseInt((value as unknown) as string) : undefined,
+                    clerkId: undefined // Reset clerk when branch changes
+                  }))}
+                  options={[
+                    { value: '', label: 'Select Branch' },
+                    ...branches.map(branch => ({
+                      value: branch.id.toString(),
+                      label: branch.name
+                    }))
+                  ]}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Clerk *
+                </label>
+                <Select
+                  value={newExpense.clerkId?.toString() || ''}
+                  onChange={(value) => setNewExpense(prev => ({ 
+                    ...prev, 
+                    clerkId: (value as unknown) as string ? parseInt((value as unknown) as string) : undefined 
+                  }))}
+                  options={[
+                    { value: '', label: 'Select Clerk' },
+                    ...users
+                      .filter(user => {
+                        const shouldInclude = !newExpense.branchId || user.branchId === newExpense.branchId;
+                        console.log(`User ${user.username} (branchId: ${user.branchId}) - Selected branch: ${newExpense.branchId} - Include: ${shouldInclude}`);
+                        return shouldInclude;
+                      })
+                      .map(user => ({
+                        value: user.id.toString(),
+                        label: user.firstName && user.lastName 
+                          ? `${user.firstName} ${user.lastName} (${user.username})` 
+                          : user.username
+                      }))
+                  ]}
+                  disabled={!newExpense.branchId}
+                  required
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Optional Branch Selection for Operational Expenses */}
+          {expenseType === 'operational' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Branch (Optional)
+              </label>
+              <Select
+                value={newExpense.branchId?.toString() || ''}
+                onChange={(value) => setNewExpense(prev => ({ 
+                  ...prev, 
+                  branchId: (value as unknown) as string ? parseInt((value as unknown) as string) : undefined
+                }))}
+                options={[
+                  { value: '', label: 'General Operations (No specific branch)' },
+                  ...branches.map(branch => ({
+                    value: branch.id.toString(),
+                    label: branch.name
+                  }))
+                ]}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Leave as "General Operations" for company-wide expenses like office rent, utilities, etc.
+              </p>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description *
+            </label>
+            <Input
+              value={newExpense.description}
+              onChange={(e) => setNewExpense(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Enter expense description..."
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Amount (KES) *
+              </label>
+              <Input
+                type="number"
+                value={newExpense.amount}
+                onChange={(e) => setNewExpense(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Receipt Number
+              </label>
+              <Input
+                value={newExpense.receiptNumber || ''}
+                onChange={(e) => setNewExpense(prev => ({ ...prev, receiptNumber: e.target.value }))}
+                placeholder="Optional receipt number"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Vendor/Supplier
+            </label>
+            <Input
+              value={newExpense.vendor || ''}
+              onChange={(e) => setNewExpense(prev => ({ ...prev, vendor: e.target.value }))}
+              placeholder="Optional vendor name"
+            />
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-3">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={resetCreateModal}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateExpense}
+              className="flex items-center space-x-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Expense</span>
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

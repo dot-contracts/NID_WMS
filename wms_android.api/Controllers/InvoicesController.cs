@@ -76,8 +76,32 @@ namespace wms_android.api.Controllers
                     return BadRequest(new { message = "Contract customer not found" });
                 }
 
+                // Validate and get selected parcels
+                if (createInvoiceDto.ParcelIds == null || !createInvoiceDto.ParcelIds.Any())
+                {
+                    return BadRequest(new { message = "At least one parcel must be selected" });
+                }
+
+                // Convert string parcel IDs to Guids
+                var parcelGuids = createInvoiceDto.ParcelIds.Select(id => Guid.Parse(id)).ToList();
+                
+                var parcels = await _context.Parcels
+                    .Where(p => parcelGuids.Contains(p.Id))
+                    .ToListAsync();
+
+                if (parcels.Count != createInvoiceDto.ParcelIds.Count)
+                {
+                    return BadRequest(new { message = "One or more selected parcels not found" });
+                }
+
                 // Generate invoice number
                 var invoiceNumber = await GenerateInvoiceNumber();
+
+                // Calculate totals - prices are VAT-inclusive
+                var totalAmount = parcels.Sum(p => p.TotalAmount); // VAT-inclusive total
+                var taxRate = 0.16m; // 16% VAT
+                var subtotal = totalAmount / (1 + taxRate); // Extract base amount
+                var taxAmount = totalAmount - subtotal; // VAT component
 
                 var invoice = new Invoice
                 {
@@ -89,9 +113,9 @@ namespace wms_android.api.Controllers
                     BillingPeriodStart = createInvoiceDto.BillingPeriodStart,
                     BillingPeriodEnd = createInvoiceDto.BillingPeriodEnd,
                     Status = "draft",
-                    Subtotal = 0,
-                    TaxAmount = 0,
-                    TotalAmount = 0,
+                    Subtotal = subtotal,
+                    TaxAmount = taxAmount,
+                    TotalAmount = totalAmount,
                     PaidAmount = 0,
                     Notes = createInvoiceDto.Notes,
                     CreatedById = createInvoiceDto.CreatedById,
@@ -100,6 +124,22 @@ namespace wms_android.api.Controllers
                 };
 
                 _context.Invoices.Add(invoice);
+                await _context.SaveChangesAsync();
+
+                // Create invoice items for each selected parcel
+                var invoiceItems = parcels.Select(p => new InvoiceItem
+                {
+                    InvoiceId = invoice.Id,
+                    ParcelId = p.Id.ToString(),
+                    WaybillNumber = p.WaybillNumber ?? "",
+                    Description = p.Description ?? "",
+                    Quantity = p.Quantity ?? 1,
+                    UnitPrice = p.TotalAmount / (p.Quantity ?? 1), // Calculate unit price
+                    TotalPrice = p.TotalAmount,
+                    CreatedAt = DateTime.UtcNow
+                }).ToList();
+
+                _context.InvoiceItems.AddRange(invoiceItems);
                 await _context.SaveChangesAsync();
 
                 // Reload with relationships
