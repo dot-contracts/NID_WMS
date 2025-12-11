@@ -320,7 +320,9 @@ const CreateDispatch: React.FC = () => {
 
   const handleParcelSelection = (parcelId: string, checked: boolean) => {
     if (checked) {
-      setSelectedParcelIds(prev => [...prev, parcelId]);
+      setSelectedParcelIds(prev => 
+        prev.includes(parcelId) ? prev : [...prev, parcelId]
+      );
     } else {
       setSelectedParcelIds(prev => prev.filter(id => id !== parcelId));
     }
