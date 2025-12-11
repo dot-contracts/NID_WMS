@@ -61,10 +61,11 @@ const FinancialDashboard: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // Load invoices and calculate financial metrics
-      const [invoices, parcels] = await Promise.all([
+      // Load invoices, parcels, and expenses data
+      const [invoices, parcels, expensesSummary] = await Promise.all([
         wmsApi.getInvoices(),
-        wmsApi.getParcels()
+        wmsApi.getParcels(),
+        wmsApi.getExpensesSummary()
       ]);
 
       // Calculate financial summary
@@ -111,8 +112,8 @@ const FinancialDashboard: React.FC = () => {
         .filter(p => p.paymentMethods === 'Paid')
         .reduce((sum, p) => sum + p.totalAmount, 0);
 
-      // Mock expenses for now - replace with actual expense data when available
-      const totalExpenses = monthlyRevenue * 0.3; // 30% expense ratio
+      // Use real expense data
+      const totalExpenses = expensesSummary.monthlyTotal; // Current month approved expenses
       const netProfit = monthlyRevenue - totalExpenses;
 
       setSummary({
@@ -139,10 +140,15 @@ const FinancialDashboard: React.FC = () => {
           })
           .reduce((sum, p) => sum + (p.totalAmount || 0), 0);
 
+        // Use real expense data for current month, estimate for previous months
+        const monthExpenses = (date.getMonth() === currentMonth && date.getFullYear() === currentYear) 
+          ? expensesSummary.monthlyTotal 
+          : monthRevenue * 0.25; // Conservative 25% estimate for historical months
+
         chartData.push({
           month: date.toLocaleDateString('en-US', { month: 'short' }),
           revenue: monthRevenue,
-          expenses: monthRevenue * 0.3 // Mock expenses
+          expenses: monthExpenses
         });
       }
       setRevenueData(chartData);

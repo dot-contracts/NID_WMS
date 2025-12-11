@@ -308,6 +308,19 @@ export interface ApproveExpenseDto {
   notes?: string;
 }
 
+export interface ExpensesSummary {
+  totalExpenses: number;
+  pendingExpenses: number;
+  approvedExpenses: number;
+  rejectedExpenses: number;
+  monthlyTotal: number;
+  categoryBreakdown: {
+    category: string;
+    amount: number;
+    count: number;
+  }[];
+}
+
 // Enhanced Clerk Cash Management Types
 export interface EnhancedClerkCashSummary {
   id: number;
@@ -1476,6 +1489,24 @@ class WMSApiService {
 
       return await response.json();
     } catch (error) {
+      throw error;
+    }
+  }
+
+  async getExpensesSummary(): Promise<ExpensesSummary> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/Expenses/summary`, {
+        headers: this.getHeaders(),
+        signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch expenses summary: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching expenses summary:', error);
       throw error;
     }
   }
