@@ -66,6 +66,12 @@ namespace wms_android.api.Controllers
         {
             try
             {
+                // Validate required fields
+                if (string.IsNullOrWhiteSpace(createDto.Name))
+                {
+                    return BadRequest(new { message = "Name is required" });
+                }
+
                 // Check if customer with same name or email already exists
                 var existingCustomer = await _context.ContractCustomers
                     .Where(c => c.Name.ToLower() == createDto.Name.ToLower() || 
@@ -238,12 +244,13 @@ namespace wms_android.api.Controllers
 
         private async Task<string> GenerateContractNumberAsync()
         {
-            var currentYear = DateTime.UtcNow.Year;
-            var yearPrefix = $"FHL-{currentYear}-CTR";
+            var now = DateTime.UtcNow;
+            var monthYear = now.ToString("MMyy"); // MM for month, yy for 2-digit year
+            var contractPrefix = $"NID-{monthYear}-CTR";
 
-            // Get the highest numeric code for this year
+            // Get the highest numeric code for this month/year
             var existingContracts = await _context.ContractCustomers
-                .Where(c => c.ContractNumber != null && c.ContractNumber.StartsWith(yearPrefix))
+                .Where(c => c.ContractNumber != null && c.ContractNumber.StartsWith(contractPrefix))
                 .Select(c => c.ContractNumber)
                 .ToListAsync();
 
@@ -251,7 +258,7 @@ namespace wms_android.api.Controllers
             foreach (var contractNumber in existingContracts)
             {
                 // Extract the numeric part after the prefix
-                var numericPart = contractNumber.Substring(yearPrefix.Length);
+                var numericPart = contractNumber.Substring(contractPrefix.Length);
                 if (int.TryParse(numericPart, out int number))
                 {
                     maxNumber = Math.Max(maxNumber, number);
@@ -260,7 +267,7 @@ namespace wms_android.api.Controllers
 
             // Generate the next number with zero-padding (3 digits)
             var nextNumber = maxNumber + 1;
-            return $"{yearPrefix}{nextNumber:D3}";
+            return $"{contractPrefix}{nextNumber:D3}";
         }
     }
 }
