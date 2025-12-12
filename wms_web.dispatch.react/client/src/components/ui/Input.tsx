@@ -10,7 +10,7 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
   size?: 'sm' | 'md' | 'lg';
 }
 
-const Input: React.FC<InputProps> = ({
+const Input = React.forwardRef<HTMLInputElement, InputProps>(({
   label,
   error,
   helperText,
@@ -20,7 +20,7 @@ const Input: React.FC<InputProps> = ({
   className,
   id,
   ...props
-}) => {
+}, ref) => {
   const inputId = id || `input-${Math.random().toString(36).slice(2, 11)}`;
 
   const sizeClasses = {
@@ -54,6 +54,7 @@ const Input: React.FC<InputProps> = ({
         )}
         
         <input
+          ref={ref}
           id={inputId}
           className={clsx(
             'block w-full shadow-sm placeholder-gray-400 focus:outline-none transition-all duration-200 dark:text-white dark:placeholder-gray-500',
@@ -79,6 +80,8 @@ const Input: React.FC<InputProps> = ({
       )}
     </div>
   );
-};
+});
+
+Input.displayName = 'Input';
 
 export default Input;
