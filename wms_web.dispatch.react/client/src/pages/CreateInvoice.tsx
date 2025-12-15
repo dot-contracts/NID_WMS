@@ -61,22 +61,87 @@ const CreateInvoice: React.FC = () => {
   };
 
   const filteredParcels = useMemo(() => {
-    let filtered = parcels.filter(parcel => 
-      // Only show Confirmed parcels (status = 1) that can be invoiced
-      parcel.status === 1 && !parcel.dispatchedAt
-    );
+    console.log('🔍 Filtering parcels:', {
+      totalParcels: parcels.length,
+      billingPeriodStart: formData.billingPeriodStart,
+      billingPeriodEnd: formData.billingPeriodEnd,
+      searchTerm
+    });
+
+    let filtered = parcels.filter(parcel => {
+      // Check parcel status and dispatch status
+      const isConfirmed = parcel.status === 1; // Confirmed status
+      const notDispatched = !parcel.dispatchedAt; // Not yet dispatched
+      
+      console.log(`📦 Parcel ${parcel.id}:`, {
+        status: parcel.status,
+        isConfirmed,
+        dispatchedAt: parcel.dispatchedAt,
+        notDispatched,
+        passes: isConfirmed && notDispatched
+      });
+      
+      // Only show Confirmed parcels (status = 1) that haven't been dispatched
+      return isConfirmed && notDispatched;
+    });
+
+    console.log('📦 After status filter:', filtered.length);
+
+    // Filter by billing period if both dates are provided
+    if (formData.billingPeriodStart && formData.billingPeriodEnd) {
+      const startDate = new Date(formData.billingPeriodStart);
+      const endDate = new Date(formData.billingPeriodEnd);
+      // Set end date to end of day for inclusive filtering
+      endDate.setHours(23, 59, 59, 999);
+
+      console.log('📅 Date filtering:', {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        sampleParcelDates: filtered.slice(0, 3).map(p => ({
+          id: p.id,
+          createdAt: p.createdAt,
+          parsedDate: p.createdAt ? new Date(p.createdAt).toISOString() : 'No date'
+        }))
+      });
+
+      const beforeDateFilter = filtered.length;
+      filtered = filtered.filter(parcel => {
+        if (!parcel.createdAt) {
+          console.log('⚠️ Parcel missing createdAt:', parcel.id);
+          return false;
+        }
+        const parcelDate = new Date(parcel.createdAt);
+        const isInRange = parcelDate >= startDate && parcelDate <= endDate;
+        
+        if (!isInRange) {
+          console.log('📅 Parcel outside date range:', {
+            parcelId: parcel.id,
+            parcelDate: parcelDate.toISOString(),
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString()
+          });
+        }
+        
+        return isInRange;
+      });
+      
+      console.log(`📅 After date filter: ${filtered.length} (was ${beforeDateFilter})`);
+    }
 
     if (searchTerm) {
+      const beforeSearchFilter = filtered.length;
       filtered = filtered.filter(parcel =>
         parcel.waybillNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         parcel.sender.toLowerCase().includes(searchTerm.toLowerCase()) ||
         parcel.receiver.toLowerCase().includes(searchTerm.toLowerCase()) ||
         parcel.destination.toLowerCase().includes(searchTerm.toLowerCase())
       );
+      console.log(`🔍 After search filter: ${filtered.length} (was ${beforeSearchFilter})`);
     }
 
+    console.log('✅ Final filtered parcels:', filtered.length);
     return filtered;
-  }, [parcels, searchTerm]);
+  }, [parcels, searchTerm, formData.billingPeriodStart, formData.billingPeriodEnd]);
 
   const handleParcelSelection = (parcelId: string, selected: boolean) => {
     if (selected) {
@@ -100,6 +165,12 @@ const CreateInvoice: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+    
+    // Clear selected parcels when billing period changes to ensure only
+    // parcels from the selected period can be included
+    if (field === 'billingPeriodStart' || field === 'billingPeriodEnd') {
+      setSelectedParcelIds([]);
     }
   };
 
@@ -247,6 +318,19 @@ const CreateInvoice: React.FC = () => {
         <div>
           <div>{parcel.description}</div>
           <div className="text-sm text-gray-500">Qty: {parcel.quantity}</div>
+        </div>
+      )
+    },
+    {
+      key: 'createdAt',
+      header: 'Created',
+      render: (parcel: Parcel) => (
+        <div className="text-sm text-gray-600">
+          {parcel.createdAt ? new Date(parcel.createdAt).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          }) : 'N/A'}
         </div>
       )
     },
@@ -428,6 +512,11 @@ const CreateInvoice: React.FC = () => {
 
           <div className="mt-4 text-sm text-gray-600">
             Showing {filteredParcels.length} confirmed parcels available for invoicing
+            {formData.billingPeriodStart && formData.billingPeriodEnd && (
+              <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-md">
+                Filtered by billing period: {new Date(formData.billingPeriodStart).toLocaleDateString('en-GB')} - {new Date(formData.billingPeriodEnd).toLocaleDateString('en-GB')}
+              </span>
+            )}
           </div>
         </Card>
 

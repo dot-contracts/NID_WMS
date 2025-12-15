@@ -1135,6 +1135,8 @@ class WMSApiService {
 
   async createContractCustomer(customer: Omit<ContractCustomer, 'id' | 'createdAt' | 'updatedAt'>): Promise<ContractCustomer> {
     try {
+      console.log('Creating contract customer with data:', customer);
+      
       const response = await fetch(`${API_BASE_URL}/ContractCustomers`, {
         method: 'POST',
         headers: {
@@ -1146,11 +1148,14 @@ class WMSApiService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create contract customer: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`Failed to create contract customer: ${response.status} - ${errorText}`);
       }
 
       return await response.json();
     } catch (error) {
+      console.error('Create contract customer error:', error);
       throw error;
     }
   }

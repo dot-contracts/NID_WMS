@@ -270,7 +270,7 @@ namespace wms_android.ViewModels
             {
                 return phoneNumber.Substring(4).All(char.IsDigit);
             }
-            else if (phoneNumber.StartsWith("07") && phoneNumber.Length == 10)
+            else if ((phoneNumber.StartsWith("07") || phoneNumber.StartsWith("01")) && phoneNumber.Length == 10)
             {
                 return phoneNumber.Substring(2).All(char.IsDigit);
             }

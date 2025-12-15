@@ -245,8 +245,9 @@ namespace wms_android.api.Controllers
         private async Task<string> GenerateContractNumberAsync()
         {
             var now = DateTime.UtcNow;
-            var monthYear = now.ToString("MMyy"); // MM for month, yy for 2-digit year
-            var contractPrefix = $"NID-{monthYear}-CTR";
+            var month = now.ToString("MM"); // MM for month
+            var year = now.ToString("yy");  // yy for 2-digit year
+            var contractPrefix = $"NID-{month}/{year}-CTR";
 
             // Get the highest numeric code for this month/year
             var existingContracts = await _context.ContractCustomers
