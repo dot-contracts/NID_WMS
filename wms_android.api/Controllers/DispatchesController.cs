@@ -114,11 +114,26 @@ namespace wms_android.api.Controllers
         [HttpGet("branch/{branch}")]
         public async Task<ActionResult<IEnumerable<Dispatch>>> GetDispatchesByBranch(string branch)
         {
+            Console.WriteLine($"[DispatchesController] GetDispatchesByBranch called with branch: '{branch}'");
+            
+            // Get all dispatches first to debug
+            var allDispatches = await _context.Dispatches.ToListAsync();
+            Console.WriteLine($"[DispatchesController] Total dispatches in DB: {allDispatches.Count}");
+            
+            foreach (var d in allDispatches.Take(5)) // Log first 5 for debugging
+            {
+                Console.WriteLine($"[DispatchesController] Dispatch ID: {d.Id}, SourceBranch: '{d.SourceBranch}', Destination: '{d.Destination}', DispatchCode: '{d.DispatchCode}'");
+            }
+            
+            // Branch managers should see dispatches going TO their branch (Destination)
+            // as well as dispatches coming FROM their branch (SourceBranch)
             var dispatches = await _context.Dispatches
-                .Where(d => d.SourceBranch.ToLower() == branch.ToLower())
+                .Where(d => (!string.IsNullOrEmpty(d.SourceBranch) && d.SourceBranch.ToLower() == branch.ToLower()) ||
+                           (!string.IsNullOrEmpty(d.Destination) && d.Destination.ToLower() == branch.ToLower()))
                 .OrderByDescending(d => d.DispatchTime)
                 .ToListAsync();
 
+            Console.WriteLine($"[DispatchesController] Filtered dispatches for branch '{branch}': {dispatches.Count}");
             return Ok(dispatches);
         }
 
