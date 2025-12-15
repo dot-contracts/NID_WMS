@@ -240,7 +240,7 @@ export const generateFilterSummary = (filters: any): string => {
     activeFilters.push(`Date: ${from} to ${to}`);
   }
 
-  if (filters.amountRange.from || filters.amountRange.to) {
+  if (filters.amountRange?.from || filters.amountRange?.to) {
     const from = filters.amountRange.from || '0';
     const to = filters.amountRange.to || '∞';
     activeFilters.push(`Amount: KES ${from} to ${to}`);
