@@ -969,11 +969,10 @@ Processed by: {username}
 
 NB:
 1. Contents not checked.
-2. Customers advised to insure
-   goods if value exceeds Ksh 500.
-3. Mirrors/boards carried at
-   owner's risk.
-4. Cash not accepted as courier,
+2. Customers advised to insure goods 
+   if value exceeds Ksh 50,000.
+3. Mirrors/boards carried at owner's risk.
+4. Cash not accepted as courier, 
    company not liable.
 
 ";
@@ -1092,11 +1091,10 @@ Processed by: {username}
 
 NB:
 1. Contents not checked.
-2. Customers advised to insure
-   goods if value exceeds Ksh 500.
-3. Mirrors/boards carried at
-   owner's risk.
-4. Cash not accepted as courier,
+2. Customers advised to insure goods 
+   if value exceeds Ksh 50,000.
+3. Mirrors/boards carried at owner's risk.
+4. Cash not accepted as courier, 
    company not liable.
 
 ";
@@ -1199,11 +1197,10 @@ Processed by: {username}
 
 NB:
 1. Contents not checked.
-2. Customers advised to insure
-   goods if value exceeds Ksh 500.
-3. Mirrors/boards carried at
-   owner's risk.
-4. Cash not accepted as courier,
+2. Customers advised to insure goods 
+   if value exceeds Ksh 50,000.
+3. Mirrors/boards carried at owner's risk.
+4. Cash not accepted as courier, 
    company not liable.
 
 ";

@@ -364,14 +364,12 @@ namespace wms_android.ViewModels
             // Disclaimer
             sb.AppendLine("NB:");
             sb.AppendLine("1. Contents not checked.");
-            sb.AppendLine("2. Customers are advised to insu");
-            sb.AppendLine("   re their goods if the value exce");
-            sb.AppendLine("   eds Ksh 500.");
-            sb.AppendLine("3. All mirrors/boards are carrie");
-            sb.AppendLine("   d at owner's risk.");
-            sb.AppendLine("4. Cash is not accepted as a cou");
-            sb.AppendLine("   rier, and the company will not b");
-            sb.AppendLine("   e held liable.");
+            sb.AppendLine("2. Customers are advised to insure");
+            sb.AppendLine("   goods if value exceeds Ksh 50,000.");
+            sb.AppendLine("3. All mirrors/boards are carried");
+            sb.AppendLine("   at owner's risk.");
+            sb.AppendLine("4. Cash is not accepted as courier,");
+            sb.AppendLine("   and company will not be liable.");
             sb.AppendLine();
             
             return sb.ToString();
