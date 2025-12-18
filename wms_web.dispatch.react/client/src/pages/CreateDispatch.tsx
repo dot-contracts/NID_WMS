@@ -416,10 +416,10 @@ const CreateDispatch: React.FC = () => {
         dispatchCode,
         sourceBranch: formData.sourceBranch,
         destination: formData.destination,
-        driver_name: formData.driverName,
-        driver_phone: formData.driverPhone,
-        vehicle_registration: formData.vehicleNumber,
-        parcel_ids: selectedParcelIds
+        driver: formData.driverName,
+        driverPhone: formData.driverPhone,
+        vehicleNumber: formData.vehicleNumber,
+        parcelIds: selectedParcelIds
       };
 
 
