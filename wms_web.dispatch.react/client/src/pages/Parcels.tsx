@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, Search, Filter, Download, Eye, Edit, RefreshCw, Calendar, MapPin, DollarSign, User, Phone, X } from 'lucide-react';
+import { Package, Search, Filter, Download, Eye, Edit, RefreshCw, Calendar, MapPin, DollarSign, User, Phone, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Card, Button, Badge, Table, FilterPanel, FilterField } from '../components/ui';
 import { VirtualScrollTable } from '../components/VirtualScrollTable';
@@ -7,6 +7,7 @@ import { SMSButton } from '../components/SMSButton';
 import { wmsApi, Parcel } from '../services/wmsApi';
 import { generateQRCode } from '../utils/qrCode';
 import { exportParcelsToPDF, generateFilterSummary } from '../utils/pdfExport';
+import { exportParcelsToCSV, exportParcelsToXLSX, generateFilterSummary as generateExportFilterSummary } from '../utils/exportUtils';
 
 interface ParcelFilterState {
   search: string;
@@ -30,6 +31,7 @@ const Parcels: React.FC = () => {
   const [clerks, setClerks] = useState<string[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
 
   const [filters, setFilters] = useState<ParcelFilterState>({
     search: '',
@@ -47,6 +49,20 @@ const Parcels: React.FC = () => {
   useEffect(() => {
     fetchParcels();
   }, []);
+
+  // Close export dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showExportDropdown) {
+        setShowExportDropdown(false);
+      }
+    };
+
+    if (showExportDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showExportDropdown]);
 
   const handleViewParcel = (parcel: Parcel) => {
     setSelectedParcel(parcel);
@@ -441,7 +457,7 @@ const Parcels: React.FC = () => {
     printWindow.focus();
   };
 
-  const handleExportPDF = async () => {
+  const handleExport = async (format: 'pdf' | 'csv' | 'xlsx') => {
     if (filteredParcels.length === 0) {
       alert('No parcels to export. Please adjust your filters or add some parcels.');
       return;
@@ -449,27 +465,53 @@ const Parcels: React.FC = () => {
 
     try {
       setIsExporting(true);
+      setShowExportDropdown(false);
 
-      const filterSummary = generateFilterSummary(filters);
+      const filterSummary = generateExportFilterSummary(filters);
       const exportDate = new Date().toISOString().split('T')[0];
+      const baseFilename = `parcels-export-${exportDate}`;
 
       // Add a small delay to show loading state for large datasets
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      exportParcelsToPDF(filteredParcels, {
+      const exportOptions = {
         title: 'Parcels Export Report',
-        filename: `parcels-export-${exportDate}.pdf`,
         includeFilters: true,
         filterSummary: filterSummary
-      });
+      };
+
+      switch (format) {
+        case 'pdf':
+          exportParcelsToPDF(filteredParcels, {
+            ...exportOptions,
+            filename: `${baseFilename}.pdf`,
+            filterSummary: generateFilterSummary(filters) // Use original function for PDF
+          });
+          break;
+        case 'csv':
+          exportParcelsToCSV(filteredParcels, {
+            ...exportOptions,
+            filename: `${baseFilename}.csv`
+          });
+          break;
+        case 'xlsx':
+          exportParcelsToXLSX(filteredParcels, {
+            ...exportOptions,
+            filename: `${baseFilename}.xlsx`
+          });
+          break;
+      }
 
     } catch (error) {
-      console.error('Error exporting PDF:', error);
-      alert('Failed to export PDF. Please try again.');
+      console.error(`Error exporting ${format.toUpperCase()}:`, error);
+      alert(`Failed to export ${format.toUpperCase()}. Please try again.`);
     } finally {
       setIsExporting(false);
     }
   };
+
+  // Legacy function for backward compatibility
+  const handleExportPDF = () => handleExport('pdf');
 
   const fetchParcels = async (forceRefresh = false) => {
     try {
@@ -994,24 +1036,60 @@ const Parcels: React.FC = () => {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Parcels ({filteredParcels.length})
             </h2>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportPDF}
-              disabled={isExporting || filteredParcels.length === 0}
-            >
-              {isExporting ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
-                </>
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowExportDropdown(!showExportDropdown);
+                }}
+                disabled={isExporting || filteredParcels.length === 0}
+                className="flex items-center"
+              >
+                {isExporting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+
+              {/* Export Dropdown */}
+              {showExportDropdown && !isExporting && (
+                <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10">
+                  <div className="py-1">
+                    <button
+                      onClick={() => handleExport('pdf')}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export as PDF
+                    </button>
+                    <button
+                      onClick={() => handleExport('csv')}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export as CSV
+                    </button>
+                    <button
+                      onClick={() => handleExport('xlsx')}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export as XLSX
+                    </button>
+                  </div>
+                </div>
               )}
-            </Button>
+            </div>
           </div>
         </Card.Header>
 
