@@ -133,8 +133,9 @@ namespace wms_android.api.Controllers
                     ParcelId = p.Id.ToString(),
                     WaybillNumber = p.WaybillNumber ?? "",
                     Description = p.Description ?? "",
+                    Destination = p.Destination ?? "",
+                    ParcelCreatedAt = p.CreatedAt,
                     Quantity = p.Quantity ?? 1,
-                    UnitPrice = p.TotalAmount / (p.Quantity ?? 1), // Calculate unit price
                     TotalPrice = p.TotalAmount,
                     CreatedAt = DateTime.UtcNow
                 }).ToList();
@@ -232,6 +233,45 @@ namespace wms_android.api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Failed to record payment", error = ex.Message });
+            }
+        }
+
+        // GET: api/Invoices/eligible-parcels
+        [HttpGet("eligible-parcels")]
+        public async Task<ActionResult<IEnumerable<Parcel>>> GetEligibleParcels([FromQuery] DateTime? billingPeriodStart = null, [FromQuery] DateTime? billingPeriodEnd = null)
+        {
+            try
+            {
+                var query = _context.Parcels.AsQueryable();
+                
+                // Filter for parcels eligible for invoicing:
+                // 1. Status must be Confirmed (1) or Delivered (3)
+                // 2. Payment method must be "contract"
+                // 3. Must have been dispatched (DispatchedAt is not null)
+                query = query.Where(p => 
+                    (p.Status == ParcelStatus.Confirmed || p.Status == ParcelStatus.Delivered) &&
+                    p.PaymentMethods.ToLower().Contains("contract") &&
+                    p.DispatchedAt != null
+                );
+                
+                // Filter by billing period if provided
+                if (billingPeriodStart.HasValue && billingPeriodEnd.HasValue)
+                {
+                    // Use DispatchedAt for billing period filtering as this represents when service was delivered
+                    query = query.Where(p => p.DispatchedAt >= billingPeriodStart && p.DispatchedAt <= billingPeriodEnd.Value.AddDays(1).AddTicks(-1));
+                }
+                
+                var eligibleParcels = await query
+                    .Include(p => p.CreatedBy)
+                    .Include(p => p.Shipment)
+                    .OrderByDescending(p => p.DispatchedAt ?? p.CreatedAt)
+                    .ToListAsync();
+
+                return Ok(eligibleParcels);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to retrieve eligible parcels", error = ex.Message });
             }
         }
 

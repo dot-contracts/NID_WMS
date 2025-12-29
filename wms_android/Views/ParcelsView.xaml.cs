@@ -71,13 +71,13 @@ public partial class ParcelsView : ContentPage
         if (string.IsNullOrWhiteSpace(phoneNumber))
             return false;
 
-        // Check if the number starts with +254 (international format) or 07 (local format)
+        // Check if the number starts with +254 (international format), 07, or 01 (local format)
         if (phoneNumber.StartsWith("+254") && phoneNumber.Length == 13)
         {
             // Ensure the rest of the number is digits
             return phoneNumber.Substring(4).All(char.IsDigit);
         }
-        else if (phoneNumber.StartsWith("07") && phoneNumber.Length == 10)
+        else if ((phoneNumber.StartsWith("07") || phoneNumber.StartsWith("01")) && phoneNumber.Length == 10)
         {
             // Ensure the rest of the number is digits
             return phoneNumber.Substring(2).All(char.IsDigit);

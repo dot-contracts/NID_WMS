@@ -110,8 +110,9 @@ export const InvoicePrintView: React.FC<InvoicePrintViewProps> = ({ invoice }) =
             <h1 className="print-company-name">NID LOGISTICS LTD</h1>
             <p className="text-gray-600">Efficiency in Motion</p>
             <p className="text-sm text-gray-500 mt-2">
-              Tel: +254 700 000 000 | Email: info@nidlogistics.co.ke<br/>
-              P.O. Box 12345-00100, Nairobi | www.nidlogistics.co.ke
+              Phone: 0116000004 | Email: info@nidlogistics.co.ke<br/>
+              P.O. BOX 42606-00100, Nairobi<br/>
+              Address: SMK Business Park, Off Enterprise Road, 1st Floor, Room A13
             </p>
           </div>
           <div className="text-right">
@@ -157,8 +158,9 @@ export const InvoicePrintView: React.FC<InvoicePrintViewProps> = ({ invoice }) =
             <tr>
               <th className="text-left">Waybill Number</th>
               <th className="text-left">Description</th>
+              <th className="text-left">Destination</th>
+              <th className="text-center">Created Date</th>
               <th className="text-center">Qty</th>
-              <th className="text-right">Unit Price</th>
               <th className="text-right">Total</th>
             </tr>
           </thead>
@@ -168,14 +170,15 @@ export const InvoicePrintView: React.FC<InvoicePrintViewProps> = ({ invoice }) =
                 <tr key={index}>
                   <td>{item.waybillNumber}</td>
                   <td>{item.description}</td>
+                  <td>{item.destination || 'Not Available'}</td>
+                  <td className="text-center">{item.parcelCreatedAt ? formatDate(item.parcelCreatedAt) : 'Not Available'}</td>
                   <td className="text-center">{item.quantity}</td>
-                  <td className="text-right">{formatCurrency(item.unitPrice)}</td>
                   <td className="text-right font-medium">{formatCurrency(item.totalPrice)}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="text-center text-gray-500 py-4">
+                <td colSpan={6} className="text-center text-gray-500 py-4">
                   No items found for this invoice
                 </td>
               </tr>
@@ -425,7 +428,7 @@ const generateInvoiceHTML = (invoice: Invoice) => {
       <div class="company-info">
         <h1>NID LOGISTICS LTD</h1>
         <p>Efficiency in Motion</p>
-        <p style="margin-top: 5px; color: #666;">Tel: +254 700 000 000 | Email: info@nidlogistics.co.ke<br/>P.O. Box 12345-00100, Nairobi | www.nidlogistics.co.ke</p>
+        <p style="margin-top: 5px; color: #666;">Phone: 0116000004 | Email: info@nidlogistics.co.ke<br/>P.O. BOX 42606-00100, Nairobi<br/>Address: SMK Business Park, Off Enterprise Road, 1st Floor, Room A13</p>
       </div>
       <div class="invoice-info">
         <h2>INVOICE</h2>
@@ -467,8 +470,9 @@ const generateInvoiceHTML = (invoice: Invoice) => {
           <tr>
             <th>Waybill Number</th>
             <th>Description</th>
+            <th>Destination</th>
+            <th class="text-center">Created Date</th>
             <th class="text-center">Qty</th>
-            <th class="text-right">Unit Price</th>
             <th class="text-right">Total</th>
           </tr>
         </thead>
@@ -478,12 +482,13 @@ const generateInvoiceHTML = (invoice: Invoice) => {
               <tr>
                 <td>${item.waybillNumber}</td>
                 <td>${item.description}</td>
+                <td>${item.destination || 'Not Available'}</td>
+                <td class="text-center">${item.parcelCreatedAt ? formatDate(item.parcelCreatedAt) : 'Not Available'}</td>
                 <td class="text-center">${item.quantity}</td>
-                <td class="text-right">${formatCurrency(item.unitPrice)}</td>
                 <td class="text-right" style="font-weight: 500;">${formatCurrency(item.totalPrice)}</td>
               </tr>
             `).join('') :
-            '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #666;">No items found for this invoice</td></tr>'
+            '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #666;">No items found for this invoice</td></tr>'
           }
         </tbody>
       </table>

@@ -181,12 +181,10 @@ export interface InvoiceItem {
   parcelId: string;
   waybillNumber: string;
   description: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
   destination: string;
-  sender: string;
-  receiver: string;
+  parcelCreatedAt: string;
+  quantity: number;
+  totalPrice: number;
   createdAt: string;
 }
 
@@ -1285,6 +1283,40 @@ class WMSApiService {
     }
   }
 
+  async getEligibleParcelsForInvoicing(billingPeriodStart?: string, billingPeriodEnd?: string): Promise<Parcel[]> {
+    try {
+      let url = `${API_BASE_URL}/Invoices/eligible-parcels`;
+      const params = new URLSearchParams();
+      
+      if (billingPeriodStart) {
+        params.append('billingPeriodStart', billingPeriodStart);
+      }
+      if (billingPeriodEnd) {
+        params.append('billingPeriodEnd', billingPeriodEnd);
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url, {
+        headers: this.getHeaders(),
+        signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get eligible parcels: ${response.status}`);
+      }
+
+      const parcels = await response.json();
+      
+      // Handle potential .NET $values wrapper structure
+      return parcels?.$values || parcels || [];
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async addInvoicePayment(paymentData: CreateInvoicePaymentDto): Promise<InvoicePayment> {
     try {
       const response = await fetch(`${API_BASE_URL}/Invoices/payments`, {
@@ -1463,13 +1495,41 @@ class WMSApiService {
     try {
       console.log('API: Creating expense with data:', expenseData);
       
+      // Clean the expense data - include all required fields
+      const cleanedData: any = {
+        date: new Date(expenseData.date).toISOString(),
+        category: expenseData.category,
+        description: expenseData.description,
+        amount: Number(expenseData.amount),
+        vendor: expenseData.vendor || '',
+        receiptNumber: expenseData.receiptNumber || '',
+        branchName: expenseData.branchName || '',
+        clerkName: expenseData.clerkName || ''
+      };
+
+      // Add optional fields if they have values (don't send undefined)
+      if (expenseData.branchId !== undefined && expenseData.branchId !== null) {
+        cleanedData.branchId = expenseData.branchId;
+      }
+      
+      if (expenseData.clerkId !== undefined && expenseData.clerkId !== null) {
+        cleanedData.clerkId = expenseData.clerkId;
+      }
+      
+      if (expenseData.notes) {
+        cleanedData.notes = expenseData.notes;
+      }
+      
+      console.log('API: Sending cleaned expense data:', cleanedData);
+      console.log('API: JSON payload:', JSON.stringify(cleanedData, null, 2));
+      
       const response = await fetch(`${API_BASE_URL}/Expenses`, {
         method: 'POST',
         headers: {
           ...this.getHeaders(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(expenseData),
+        body: JSON.stringify(cleanedData),
         signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
       });
 
@@ -1488,6 +1548,9 @@ class WMSApiService {
 
   async approveExpense(approvalData: ApproveExpenseDto): Promise<DailyExpense> {
     try {
+      console.log('API: Approving expense with data:', approvalData);
+      console.log('API: JSON payload:', JSON.stringify(approvalData, null, 2));
+      
       const response = await fetch(`${API_BASE_URL}/Expenses/approve`, {
         method: 'POST',
         headers: {

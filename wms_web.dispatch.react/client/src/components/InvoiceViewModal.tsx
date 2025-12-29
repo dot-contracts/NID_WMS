@@ -119,8 +119,9 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Waybill</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Destination</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Created Date</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Qty</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Price</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
                   </tr>
                 </thead>
@@ -129,8 +130,9 @@ export const InvoiceViewModal: React.FC<InvoiceViewModalProps> = ({
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.waybillNumber}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">{item.description}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{item.destination || 'Not Available'}</td>
+                      <td className="px-4 py-3 text-sm text-center text-gray-900">{item.parcelCreatedAt ? formatDate(item.parcelCreatedAt) : 'Not Available'}</td>
                       <td className="px-4 py-3 text-sm text-center text-gray-900">{item.quantity}</td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-900">{formatCurrency(item.unitPrice)}</td>
                       <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">{formatCurrency(item.totalPrice)}</td>
                     </tr>
                   ))}

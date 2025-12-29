@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using wms_android.shared.Data;
 using wms_android.shared.Models;
 using wms_android.shared.DTOs;
+using System.Security.Claims;
 
 namespace wms_android.api.Controllers
 {
@@ -72,6 +73,11 @@ namespace wms_android.api.Controllers
             try
             {
                 var currentUserId = GetCurrentUserId();
+                if (currentUserId == null)
+                {
+                    return Unauthorized("User authentication required");
+                }
+                
                 var currentUser = await _context.Users.FindAsync(currentUserId);
                 
                 var expense = new DailyExpense
@@ -80,15 +86,18 @@ namespace wms_android.api.Controllers
                     Description = createDto.Description,
                     Amount = createDto.Amount,
                     Date = createDto.Date,
-                    Vendor = createDto.Vendor,
-                    ReceiptNumber = createDto.ReceiptNumber,
+                    Vendor = createDto.Vendor ?? "",
+                    ReceiptNumber = createDto.ReceiptNumber ?? "",
                     Status = "pending",
                     BranchId = createDto.BranchId,
-                    BranchName = createDto.BranchName ?? await GetBranchName(createDto.BranchId),
+                    BranchName = createDto.BranchName ?? await GetBranchName(createDto.BranchId) ?? "",
                     ClerkId = createDto.ClerkId,
-                    ClerkName = createDto.ClerkName ?? await GetUserName(createDto.ClerkId),
-                    CreatedById = currentUserId,
+                    ClerkName = createDto.ClerkName ?? await GetUserName(createDto.ClerkId) ?? "",
+                    CreatedById = currentUserId.Value,
                     CreatedByName = $"{currentUser?.FirstName} {currentUser?.LastName}".Trim(),
+                    ApprovalNotes = "", // Initialize to empty string to satisfy NOT NULL constraint
+                    ApprovedByName = "", // Initialize to empty string to satisfy NOT NULL constraint  
+                    RejectionReason = "", // Also set this to be safe
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -173,11 +182,51 @@ namespace wms_android.api.Controllers
 
         // POST: api/Expenses/approve
         [HttpPost("approve")]
-        public async Task<IActionResult> ApproveExpense(ApproveExpenseDto approvalDto)
+        public async Task<IActionResult> ApproveExpense([FromBody] dynamic requestBody)
         {
             try
             {
-                var expense = await _context.DailyExpenses.FindAsync(approvalDto.ExpenseId);
+                Console.WriteLine($"[DEBUG] Raw request body: {requestBody}");
+                
+                // Extract values from the dynamic object
+                int expenseId = 0;
+                bool approved = false;
+                string rejectionReason = "";
+                string approvalNotes = "";
+                
+                try 
+                {
+                    var jsonElement = (System.Text.Json.JsonElement)requestBody;
+                    expenseId = jsonElement.GetProperty("expenseId").GetInt32();
+                    approved = jsonElement.GetProperty("approved").GetBoolean();
+                    
+                    // Try to get rejection reason if present
+                    if (jsonElement.TryGetProperty("rejectionReason", out var rejectionElement))
+                    {
+                        rejectionReason = rejectionElement.GetString() ?? "";
+                    }
+                    
+                    // Try to get approval notes if present
+                    if (jsonElement.TryGetProperty("notes", out var notesElement))
+                    {
+                        approvalNotes = notesElement.GetString() ?? "";
+                    }
+                    
+                    Console.WriteLine($"[DEBUG] Parsed - ExpenseId: {expenseId}, Approved: {approved}, Rejection: {rejectionReason}");
+                }
+                catch (Exception parseEx)
+                {
+                    Console.WriteLine($"[DEBUG] Parse error: {parseEx.Message}");
+                    return BadRequest("Invalid request format");
+                }
+                
+                if (expenseId <= 0)
+                {
+                    Console.WriteLine($"[DEBUG] Invalid ExpenseId: {expenseId}");
+                    return BadRequest("Invalid expense ID");
+                }
+                
+                var expense = await _context.DailyExpenses.FindAsync(expenseId);
                 if (expense == null)
                 {
                     return NotFound(new { message = "Expense not found" });
@@ -189,6 +238,24 @@ namespace wms_android.api.Controllers
                 }
 
                 var currentUserId = GetCurrentUserId();
+                if (currentUserId == null)
+                {
+                    // Use fallback user for development
+                    var fallbackUser = await _context.Users
+                        .Where(u => u.IsActive && u.Role.Name == "Admin")
+                        .Include(u => u.Role)
+                        .FirstOrDefaultAsync();
+                    if (fallbackUser != null)
+                    {
+                        currentUserId = fallbackUser.Id;
+                        Console.WriteLine($"[DEBUG] Using fallback user for approval: {currentUserId}");
+                    }
+                    else
+                    {
+                        return StatusCode(500, new { message = "No active admin user found" });
+                    }
+                }
+                
                 var currentUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == currentUserId);
 
                 // Check if user has approval permissions
@@ -198,24 +265,24 @@ namespace wms_android.api.Controllers
                 }
 
                 // Update expense status
-                expense.Status = approvalDto.Approved ? "approved" : "rejected";
-                expense.ApprovedById = currentUserId;
+                expense.Status = approved ? "approved" : "rejected";
+                expense.ApprovedById = currentUserId.Value;
                 expense.ApprovedByName = $"{currentUser?.FirstName} {currentUser?.LastName}".Trim();
                 expense.ApprovedAt = DateTime.UtcNow;
                 
-                if (approvalDto.Approved)
+                if (approved)
                 {
-                    expense.ApprovalNotes = approvalDto.ApprovalNotes;
+                    expense.ApprovalNotes = approvalNotes;
                 }
                 else
                 {
-                    expense.RejectionReason = approvalDto.RejectionReason;
+                    expense.RejectionReason = rejectionReason;
                 }
 
                 expense.UpdatedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = $"Expense {(approvalDto.Approved ? "approved" : "rejected")} successfully" });
+                return Ok(new { message = $"Expense {(approved ? "approved" : "rejected")} successfully" });
             }
             catch (Exception ex)
             {
@@ -265,7 +332,7 @@ namespace wms_android.api.Controllers
                     .Where(e => e.Status == "rejected")
                     .SumAsync(e => e.Amount);
                 var monthlyTotal = await _context.DailyExpenses
-                    .Where(e => e.Date.Month == currentMonth && e.Date.Year == currentYear)
+                    .Where(e => e.Date.Month == currentMonth && e.Date.Year == currentYear && e.Status == "approved")
                     .SumAsync(e => e.Amount);
 
                 var categoryBreakdown = await _context.DailyExpenses
@@ -352,11 +419,14 @@ namespace wms_android.api.Controllers
             return user != null ? $"{user.FirstName} {user.LastName}".Trim() : null;
         }
 
-        private int GetCurrentUserId()
+        private int? GetCurrentUserId()
         {
-            // TODO: Implement proper authentication and get user ID from JWT token
-            // For now, return a default user ID
-            return 1; // Admin user
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out int userId))
+            {
+                return userId;
+            }
+            return null;
         }
     }
 }

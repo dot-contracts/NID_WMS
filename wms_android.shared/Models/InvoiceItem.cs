@@ -26,10 +26,13 @@ namespace wms_android.shared.Models
         [StringLength(200)]
         public string Description { get; set; }
         
-        public int Quantity { get; set; } = 1;
+        [StringLength(200)]
+        public string Destination { get; set; }
         
-        [Column(TypeName = "decimal(10,2)")]
-        public decimal UnitPrice { get; set; }
+        [Column(TypeName = "timestamp with time zone")]
+        public DateTime? ParcelCreatedAt { get; set; }
+        
+        public int Quantity { get; set; } = 1;
         
         [Column(TypeName = "decimal(10,2)")]
         public decimal TotalPrice { get; set; }

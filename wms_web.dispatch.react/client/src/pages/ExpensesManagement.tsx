@@ -61,6 +61,7 @@ const ExpensesManagement: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<DailyExpense | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
   const [newExpense, setNewExpense] = useState<CreateDailyExpenseDto>({
     date: new Date().toISOString().split('T')[0],
     category: 'other',
@@ -131,13 +132,15 @@ const ExpensesManagement: React.FC = () => {
       .filter(exp => exp.status === 'rejected')
       .reduce((sum, exp) => sum + exp.amount, 0);
 
-    // Calculate monthly total (current month)
+    // Calculate monthly total (current month - APPROVED expenses only)
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     const monthlyTotal = expenses
       .filter(exp => {
         const expDate = new Date(exp.date);
-        return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
+        return expDate.getMonth() === currentMonth && 
+               expDate.getFullYear() === currentYear &&
+               exp.status === 'approved'; // Only include approved expenses
       })
       .reduce((sum, exp) => sum + exp.amount, 0);
 
@@ -297,14 +300,15 @@ const ExpensesManagement: React.FC = () => {
       key: 'actions',
       header: 'Actions',
       render: (expense: DailyExpense) => (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1 min-w-max">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setSelectedExpense(expense)}
-            className="p-2"
+            className="flex items-center space-x-1 px-2 py-1"
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-3 h-3" />
+            <span className="text-xs">View</span>
           </Button>
           {expense.status === 'pending' && canApproveExpenses() && (
             <>
@@ -312,17 +316,19 @@ const ExpensesManagement: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => handleApproveExpense(expense, true)}
-                className="p-2 text-green-600 hover:text-green-700"
+                className="flex items-center space-x-1 px-2 py-1 text-green-600 hover:text-green-700 border-green-200 hover:border-green-300"
               >
-                <ThumbsUp className="w-4 h-4" />
+                <ThumbsUp className="w-3 h-3" />
+                <span className="text-xs">Approve</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleApproveExpense(expense, false)}
-                className="p-2 text-red-600 hover:text-red-700"
+                className="flex items-center space-x-1 px-2 py-1 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
               >
-                <ThumbsDown className="w-4 h-4" />
+                <ThumbsDown className="w-3 h-3" />
+                <span className="text-xs">Reject</span>
               </Button>
             </>
           )}
@@ -346,6 +352,28 @@ const ExpensesManagement: React.FC = () => {
       await loadExpenseData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to approve expense');
+    }
+  };
+
+  const handleRejectExpense = async (expense: DailyExpense) => {
+    try {
+      if (!rejectionReason.trim()) {
+        setError('Please provide a rejection reason');
+        return;
+      }
+
+      await wmsApi.approveExpense({
+        expenseId: expense.id,
+        approved: false,
+        rejectionReason: rejectionReason.trim()
+      });
+      
+      await loadExpenseData();
+      setShowApprovalModal(false);
+      setSelectedExpense(null);
+      setRejectionReason('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reject expense');
     }
   };
 
@@ -489,9 +517,9 @@ const ExpensesManagement: React.FC = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Expenses</p>
+              <p className="text-sm font-medium text-gray-600">Total Requests</p>
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalExpenses)}</p>
-              <p className="text-sm text-gray-500 mt-1">All time</p>
+              <p className="text-sm text-gray-500 mt-1">All expenses submitted</p>
             </div>
             <Receipt className="w-8 h-8 text-gray-500" />
           </div>
@@ -511,9 +539,9 @@ const ExpensesManagement: React.FC = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Approved</p>
+              <p className="text-sm font-medium text-gray-600">Approved Total</p>
               <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.approvedExpenses)}</p>
-              <p className="text-sm text-gray-500 mt-1">Ready for processing</p>
+              <p className="text-sm text-gray-500 mt-1">All approved expenses</p>
             </div>
             <CheckCircle className="w-8 h-8 text-green-500" />
           </div>
@@ -522,9 +550,9 @@ const ExpensesManagement: React.FC = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Monthly Total</p>
+              <p className="text-sm font-medium text-gray-600">Monthly Approved</p>
               <p className="text-2xl font-bold text-blue-600">{formatCurrency(stats.monthlyTotal)}</p>
-              <p className="text-sm text-gray-500 mt-1">Current month</p>
+              <p className="text-sm text-gray-500 mt-1">This month (approved only)</p>
             </div>
             <Calendar className="w-8 h-8 text-blue-500" />
           </div>
@@ -588,12 +616,16 @@ const ExpensesManagement: React.FC = () => {
             </Button>
           </div>
         </div>
-        <VirtualScrollTable
-          data={filteredExpenses}
-          columns={columns}
-          containerHeight={600}
-          className="border-0"
-        />
+        <div className="overflow-x-auto">
+          <div style={{ minWidth: '1200px' }}>
+            <VirtualScrollTable
+              data={filteredExpenses}
+              columns={columns}
+              containerHeight={600}
+              className="border-0 w-full"
+            />
+          </div>
+        </div>
       </Card>
 
       {/* Create Expense Modal */}
@@ -809,6 +841,175 @@ const ExpensesManagement: React.FC = () => {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Expense Details Modal */}
+      <Modal
+        isOpen={!!selectedExpense && !showApprovalModal}
+        onClose={() => setSelectedExpense(null)}
+        title="Expense Details"
+      >
+        {selectedExpense && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <p className="text-sm text-gray-900">{new Date(selectedExpense.date).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <p className="text-sm text-gray-900 capitalize">{selectedExpense.category.replace('_', ' ')}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                <p className="text-sm font-semibold text-gray-900">{formatCurrency(selectedExpense.amount)}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  selectedExpense.status === 'approved' ? 'bg-green-100 text-green-700' :
+                  selectedExpense.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                  'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {selectedExpense.status}
+                </span>
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <p className="text-sm text-gray-900">{selectedExpense.description}</p>
+            </div>
+            
+            {selectedExpense.vendor && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
+                <p className="text-sm text-gray-900">{selectedExpense.vendor}</p>
+              </div>
+            )}
+            
+            {selectedExpense.receiptNumber && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Receipt Number</label>
+                <p className="text-sm text-gray-900">{selectedExpense.receiptNumber}</p>
+              </div>
+            )}
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Requested By</label>
+              <p className="text-sm text-gray-900">{selectedExpense.createdByName}</p>
+              <p className="text-xs text-gray-500">{selectedExpense.branchName}</p>
+            </div>
+            
+            {selectedExpense.clerkName && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Clerk</label>
+                <p className="text-sm text-gray-900">{selectedExpense.clerkName}</p>
+              </div>
+            )}
+            
+            {selectedExpense.approvedByName && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {selectedExpense.status === 'approved' ? 'Approved By' : 'Processed By'}
+                </label>
+                <p className="text-sm text-gray-900">{selectedExpense.approvedByName}</p>
+              </div>
+            )}
+            
+            {selectedExpense.rejectionReason && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rejection Reason</label>
+                <p className="text-sm text-red-600">{selectedExpense.rejectionReason}</p>
+              </div>
+            )}
+            
+            <div className="flex justify-end space-x-3 pt-4 border-t">
+              <Button variant="outline" onClick={() => setSelectedExpense(null)}>
+                Close
+              </Button>
+              {selectedExpense.status === 'pending' && canApproveExpenses() && (
+                <>
+                  <Button
+                    onClick={() => handleApproveExpense(selectedExpense, true)}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowApprovalModal(true);
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Reject
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Rejection Modal */}
+      <Modal
+        isOpen={showApprovalModal}
+        onClose={() => {
+          setShowApprovalModal(false);
+          setSelectedExpense(null);
+        }}
+        title="Reject Expense"
+      >
+        {selectedExpense && (
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <h4 className="text-sm font-medium text-red-800">
+                You are about to reject this expense:
+              </h4>
+              <p className="text-sm text-red-700 mt-1">
+                {selectedExpense.description} - {formatCurrency(selectedExpense.amount)}
+              </p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rejection Reason *
+              </label>
+              <textarea
+                className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                placeholder="Please provide a reason for rejecting this expense..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                required
+              />
+            </div>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+            
+            <div className="flex justify-end space-x-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowApprovalModal(false);
+                  setRejectionReason('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleRejectExpense(selectedExpense)}
+                disabled={!rejectionReason.trim()}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Reject Expense
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

@@ -374,7 +374,8 @@ namespace wms_android.shared.Data
                 entity.Property(e => e.ParcelId).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.WaybillNumber).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Description).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.UnitPrice).HasColumnType("decimal(10,2)");
+                entity.Property(e => e.Destination).HasMaxLength(200);
+                entity.Property(e => e.ParcelCreatedAt).HasColumnType("timestamp with time zone");
                 entity.Property(e => e.TotalPrice).HasColumnType("decimal(10,2)");
                 entity.Property(e => e.CreatedAt).HasColumnType("timestamp without time zone");
 
